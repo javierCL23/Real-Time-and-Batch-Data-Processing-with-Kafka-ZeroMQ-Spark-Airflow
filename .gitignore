@@ -1,0 +1,35 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv/
+venv/
+
+# Airflow logs and database
+stack_exchange_eda/logs/
+stack_exchange_eda/airflow.db
+
+# Datos crudos y procesados
+data/raw/
+data/processed/
+
+# Figuras generadas
+figs/
+
+# Archivos temporales
+*.tmp
+*.temp
+
+# Configuraciones locales
+settings.yaml
+standalone_admin_password.txt
+
+# Otros archivos generados automáticamente
+*.log
+*.db
+*.sqlite3
