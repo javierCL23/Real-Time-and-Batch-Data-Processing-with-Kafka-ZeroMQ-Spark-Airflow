@@ -26,25 +26,25 @@ def dag():
 
         url = "https://archive.org/download/stackexchange/english.stackexchange.com.7z"
         files = ["Users.xml", "Posts.xml"]
+	pathToData = "../../data/raw/" 		#MOVERLO AL TOML
+        if "data.7z" not in os.listdir(pathToData):                                                   # Descarga de datos.
+            urlb.urlretrieve(url,str(pathToData)+"data.7z")
 
-        if "data.7z" not in os.listdir("./data"):                                                   # Descarga de datos.
-            urlb.urlretrieve(url, "./data/data.7z")
-
-        archive = py7zr.SevenZipFile("./data/data.7z", 'r')                                         # Extracción de xml.
+        archive = py7zr.SevenZipFile(str(pathToData)+"data.7z", 'r')                                         # Extracción de xml.
         for file in files:
-            if file not in os.listdir("./data"):
-                archive.extract(path = "./data", targets = [file])
+            if file not in os.listdir(pathToData):
+                archive.extract(path = pathToData, targets = [file])
                 archive.reset()
         archive.close()
 
         for file in files:                                                                          # Conversión a pickle.
-            if f"{file[:-4]}.pkl" not in os.listdir("./data"):
+            if f"{file[:-4]}.pkl" not in os.listdir(pathToData):
                 print(f"{file[:-4]}.pkl no encontrado, procediendo a la compresión...")
                 pd.read_xml(os.path.abspath(f"./data/{file}")).to_pickle(f"./data/{file[:-4]}.pkl")
                 print(f"{file[:-4]}.pkl creado")
 
         
-        Users = pd.read_pickle(os.path.abspath("./data/Users.pkl"))                                      # Lectura de datos.
+        Users = pd.read_pickle(os.path.abspath(str(pathToData)+"Users.pkl"))                                      # Lectura de datos.
         Posts = pd.read_pickle(os.path.abspath("./data/Posts.pkl"))
 
         Users_Train, Users_Test = train_test_split(Users,test_size=0.3)
