@@ -21,16 +21,14 @@ from airflow.decorators import (
 )
 def dag():
 
-    @task()
+    @task(multiple_outputs=True)
     def GetData():
-
         url = "https://archive.org/download/stackexchange/english.stackexchange.com.7z"
         files = ["Users.xml", "Posts.xml"]
-	pathToData = "../../data/raw/" 		#MOVERLO AL TOML
-        if "data.7z" not in os.listdir(pathToData):                                                   # Descarga de datos.
+        pathToData = "../../data/raw/" 		#MOVERLO AL TOML
+        if "Descargados" not in os.listdir(pathToData):                                                   # Descarga de datos.
             urlb.urlretrieve(url,str(pathToData)+"data.7z")
-
-        archive = py7zr.SevenZipFile(str(pathToData)+"data.7z", 'r')                                         # Extracción de xml.
+            archive = py7zr.SevenZipFile(str(pathToData)+"data.7z", 'r')                                         # Extracción de xml.
         for file in files:
             if file not in os.listdir(pathToData):
                 archive.extract(path = pathToData, targets = [file])
@@ -50,32 +48,37 @@ def dag():
         Users_Train, Users_Test = train_test_split(Users,test_size=0.3)
         Posts_Train, Posts_Test = train_test_split(Posts,test_size=0.3)
 
-        return Users_Train, Users_Test, Posts_Train, Posts_Test
-
-    @task()
-    def RemoveNull(UsersTrain):
+        return {
+            "Users_Train": Users_Train,
+            "Users_Test": Users_Test,
+            "Posts_Train": Posts_Train,
+            "Posts_Test": Posts_Test,
+        }
+        
+    @task(multiple_outputs=True)
+    def RemoveNull(Users_Train):
         """
         Elimina las filas donde AccountId es nulo y elimina la columna AccountId del dataframe.
         Además de convertir el campo WebsiteUrl a un campo binario donde se indica si tiene o no una URL a una web.
         """        
-        UsersTrain = UsersTrain["Users_Train"].dropna(subset=['AccountId'])
-        UsersTrain = UsersTrain["Users_Train"].drop(columns=['AccountId'], errors='ignore')
+        Users_Train = Users_Train["Users_Train"].dropna(subset=['AccountId'])
+        Users_Train = Users_Train["Users_Train"].drop(columns=['AccountId'], errors='ignore')
 
-        UsersTrain["WebsiteUrl"] = UsersTrain["WebsiteUrl"].notna()
-        UsersTrain = UsersTrain.rename(columns={"WebsiteUrl":"HasUrl"})
+        Users_Train["WebsiteUrl"] = Users_Train["WebsiteUrl"].notna()
+        Users_Train = Users_Train.rename(columns={"WebsiteUrl":"HasUrl"})
 
-        return Users_Train, Posts_Train
+        return Users_Train
 
 #--------------------------SACAR WEBSITEURL ---------
 
-    @task()
-    def ConvertDates(UsersTrain, Posts_Train):
+    @task(multiple_outputs=True)
+    def ConvertDates(Users_Train, Posts_Train):
         """
         Convierte las columnas que deberían ser fechas de string a datetime,
         omitiendo los milisegundos.
         """
-        UsersTrain['CreationDate'] = pd.to_datetime(Users_Train['CreationDate']).astype('datetime64[s]')
-        UsersTrain['LastAccessDate'] = pd.to_datetime(Users_Train['LastAccessDate']).astype('datetime64[s]')
+        Users_Train['CreationDate'] = pd.to_datetime(Users_Train['CreationDate']).astype('datetime64[s]')
+        Users_Train['LastAccessDate'] = pd.to_datetime(Users_Train['LastAccessDate']).astype('datetime64[s]')
 
         Posts_Train['CreationDate'] = pd.to_datetime(Posts_Train['CreationDate']).astype('datetime64[s]')
         Posts_Train['LastActivityDate'] = pd.to_datetime(Posts_Train['LastActivityDate']).astype('datetime64[s]')
@@ -83,16 +86,16 @@ def dag():
         Posts_Train['ClosedDate'] = pd.to_datetime(Posts_Train['ClosedDate']).astype('datetime64[s]')
         Posts_Train['CommunityOwnedDate'] = pd.to_datetime(Posts_Train['CommunityOwnedDate']).astype('datetime64[s]')
 
-        return UsersTrain, Posts_Train
+        return {"Users_Train":Users_Train, "Posts_Train":Posts_Train}
 
-    @task
-    def HTML_to_Text(UsersTrain, Posts_Train):   
+    @task(multiple_outputs=True)
+    def HTML_to_Text(Users_Train, Posts_Train):   
 
-        UsersTrain['AboutMe'] = UsersTrain['AboutMe'].apply
+        Users_Train['AboutMe'] = Users_Train['AboutMe'].apply
         (
         lambda muestra: BeautifulSoup(muestra, "html.parser").get_text().strip() if not (muestra is pd.NA) else pd.NA
         )
-        UsersTrain["AboutMe"] = UsersTrain["AboutMe"].replace("",pd.NA)
+        Users_Train["AboutMe"] = Users_Train["AboutMe"].replace("",pd.NA)
         
         Posts_Train['Body'] = Posts_Train['Body'].apply
         (
@@ -100,17 +103,17 @@ def dag():
         )
         Posts_Train['Body'] = Posts_Train['Body'].replace("",pd.NA)
         
-        return UsersTrain, Posts_Train
+        return {"Users_Train":Users_Train, "Posts_Train":Posts_Train}
 
-    @task
-    def Country_Location(UsersTrain):
-	"""
-	Carga formas equivalentes de escribir un país, para poder detectar la nacionalidad de un usuario.
-	Modifica el campo "Location" para que sea únicamente el país. En caso de no reconocer ninguno de la lista, lo vuelve pd.NA.
-	De igual forma también crea una nueva variable binaria llamada HasLocation que determina si tiene algún país en su campo Location o no.
-	"""
-	with open("../../data/paisesDict.json", "r", encoding="utf-8") as archivo:
-		countries = json.load(archivo)
+    @task(multiple_outputs=True)
+    def Country_Location(Users_Train):
+        """
+        Carga formas equivalentes de escribir un país, para poder detectar la nacionalidad de un usuario.
+        Modifica el campo "Location" para que sea únicamente el país. En caso de no reconocer ninguno de la lista, lo vuelve pd.NA.
+        De igual forma también crea una nueva variable binaria llamada HasLocation que determina si tiene algún país en su campo Location o no.
+        """
+        with open("../../data/paisesDict.json", "r", encoding="utf-8") as archivo:
+            countries = json.load(archivo)
 
         pattern_dict = {}
         for country, variations in countries.items():
@@ -129,12 +132,12 @@ def dag():
                 return pd.NA  # Si no hay coincidencia
 
 
-        UsersTrain["Location"] = UsersTrain["Location"].apply(get_country)
-        UsersTrain["HasLocation"] = UsersTrain["Location"].notna().astype(bool)
+        Users_Train["Location"] = Users_Train["Location"].apply(get_country)
+        Users_Train["HasLocation"] = Users_Train["Location"].notna().astype(bool)
 
-        return UsersTrain
+        return Users_Train
 
-    @task
+    @task(multiple_outputs=True)
     def Parse_Tags(Posts_Train):
 
         Posts_Train['Tags'] = Posts_Train['Tags'].fillna('')  # Rellenar valores NaN con cadenas vacías
@@ -144,13 +147,23 @@ def dag():
 
 
 
-    Users_Train, Users_Test, Posts_Train, Posts_Test = GetData()
-    UsersTrain, Posts_Train = RemoveNull(UsersTrain)
-    UsersTrain, Posts_Train = ConvertDates(UsersTrain, Posts_Train)
-    UsersTrain = HTML_to_Text(UsersTrain)
+    data = GetData()
+    Users_Train = data["Users_Train"]
+    Users_Test = data["Users_Test"]
+    Posts_Train = data["Posts_Train"]
+    Posts_Test = data["Posts_Test"]
+
+    Users_Train = RemoveNull(Users_Train)
+    
+    data = ConvertDates(Users_Train,Posts_Train)
+    Users_Train = data["Users_Train"]
+    Posts_Train = data["Posts_Train"]
+    
+    data = HTML_to_Text(Users_Train,Posts_Train)
+    Users_Train = data["Users_Train"]
+    Posts_Train = data["Posts_Train"]
+    
     Posts_Train = Parse_Tags(Posts_Train)
-    UsersTrain = Country_Location(UsersTrain)
-    
-    
+    Users_Train = Country_Location(Users_Train)
 
 dag()
