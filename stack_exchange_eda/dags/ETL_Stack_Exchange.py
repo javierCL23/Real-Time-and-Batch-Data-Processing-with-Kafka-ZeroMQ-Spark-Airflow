@@ -61,7 +61,10 @@ def dag():
         """
         Elimina las filas donde AccountId es nulo y elimina la columna AccountId del dataframe.
         Además de convertir el campo WebsiteUrl a un campo binario donde se indica si tiene o no una URL a una web.
+        También convierte todos los tipos de Null a uno único: pd.NA
         """        
+        Users_Train = Users_Train.fillna(pd.NA)
+        
         Users_Train = Users_Train.dropna(subset=['AccountId'])
         Users_Train = Users_Train.drop(columns=['AccountId'], errors='ignore')
 
@@ -92,17 +95,19 @@ def dag():
 
     @task(multiple_outputs=True)
     def HTML_to_Text(Users_Train, Posts_Train):   
+        """
+        Convierte las variables que contienen HTML a un string donde solo se tiene el texto contenido en ese HTML
+        """
+        Users_Train['AboutMe'] = Users_Train['AboutMe'].apply(
+            lambda muestra: BeautifulSoup(muestra, "html.parser").get_text().strip() if isinstance(muestra, str) and muestra.strip() else pd.NA
+        )
 
-        Users_Train['AboutMe'] = Users_Train['AboutMe'].apply
-        (
-        lambda muestra: BeautifulSoup(muestra, "html.parser").get_text().strip() if not (muestra is pd.NA) else pd.NA
-        )
         Users_Train["AboutMe"] = Users_Train["AboutMe"].replace("",pd.NA)
-    
-        Posts_Train['Body'] = Posts_Train['Body'].apply
-        (
-        lambda muestra: BeautifulSoup(muestra, "html.parser").get_text().lower() if not (muestra is pd.NA) else pd.NA
+        
+        Posts_Train['Body'] = Posts_Train['Body'].apply(
+            lambda muestra: BeautifulSoup(muestra, "html.parser").get_text().lower() if isinstance(muestra, str) and muestra.strip() else pd.NA
         )
+        
         Posts_Train['Body'] = Posts_Train['Body'].replace("",pd.NA)
         
         return {"Users":Users_Train, "Posts":Posts_Train}
@@ -114,7 +119,7 @@ def dag():
         Modifica el campo "Location" para que sea únicamente el país. En caso de no reconocer ninguno de la lista, lo vuelve pd.NA.
         De igual forma también crea una nueva variable binaria llamada HasLocation que determina si tiene algún país en su campo Location o no.
         """
-        with open("../../data/paisesDict.json", "r", encoding="utf-8") as archivo:
+        with open("data/paisesDict.json", "r", encoding="utf-8") as archivo:
             countries = json.load(archivo)
 
         pattern_dict = {}
@@ -156,7 +161,6 @@ def dag():
     Posts_Test = data["Posts_Test"]
 
     Users_Train = RemoveNull(Users_Train)
-    
     data = ConvertDates(Users_Train,Posts_Train)
     Users_Train = data["Users"]
     Posts_Train = data["Posts"]
