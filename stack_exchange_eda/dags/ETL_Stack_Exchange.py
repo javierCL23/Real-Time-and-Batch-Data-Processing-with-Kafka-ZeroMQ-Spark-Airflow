@@ -73,6 +73,7 @@ def dag():
 
         return Users_Train
 
+    
 #--------------------------SACAR WEBSITEURL ---------
 
     @task(multiple_outputs=True)
