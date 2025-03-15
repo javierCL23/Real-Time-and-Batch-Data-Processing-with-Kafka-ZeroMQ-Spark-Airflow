@@ -6,6 +6,8 @@ import urllib.request as urlb
 import py7zr
 import os
 import sqlite3
+import plotly.express as px
+import plotly
 from sklearn.model_selection import train_test_split
 import pendulum
 from airflow.decorators import dag, task
@@ -29,26 +31,33 @@ def etl_dag():
         Devuelve el nombre de los conjuntos que se usarán separados en train y test.
         """
         url = "https://archive.org/download/stackexchange/english.stackexchange.com.7z"
-        files = ["Users.xml", "Posts.xml"]
-        pathToData = "data/raw/"
-        archive = 0
-        
-        for file in files:
-            if file not in os.listdir(pathToData):
-                if "data.7z" not in os.listdir(pathToData):
-                    urlb.urlretrieve(url, str(pathToData) + "data.7z")
-                archive = py7zr.SevenZipFile(str(pathToData) + "data.7z", 'r')
-                archive.extract(path=pathToData, targets=[file])
-                archive.reset()
-        
-        if archive != 0:
-            archive.close()
-        
-        Users = pd.read_pickle(os.path.abspath(str(pathToData) + "Users.pkl"))
-        Posts = pd.read_pickle(os.path.abspath(str(pathToData) + "Posts.pkl"))
 
-        Users_Train, Users_Test = train_test_split(Users, test_size=0.3)
-        Posts_Train, Posts_Test = train_test_split(Posts, test_size=0.3)
+        files = ["Users", "Posts"]
+        pathToData = os.path.abspath("data/raw")
+
+        for file in files:           
+
+            if f"{file}.pkl" not in os.listdir(pathToData):
+                
+                if f"{file}.xml" not in os.listdir(pathToData):
+
+                    if "data.7z" not in os.listdir(pathToData):
+
+                        urlb.urlretrieve(url, f"{pathToData}/data.7z")
+
+                    archive = py7zr.SevenZipFile(f"{pathToData}/data.7z", 'r')
+                    archive.extract(path = pathToData, targets = [f"{file}.xml"])
+                    archive.reset()
+                    archive.close()                     
+
+                pd.read_xml(f"{pathToData}/{file}.xml").to_pickle(f"{pathToData}/{file}.pkl")
+
+
+        Users = pd.read_pickle(f"{pathToData}/Users.pkl")                                      
+        Posts = pd.read_pickle(f"{pathToData}/Posts.pkl")
+
+        Users_Train, Users_Test = train_test_split(Users,test_size=0.3)
+        Posts_Train, Posts_Test = train_test_split(Posts,test_size=0.3)
 
         conn = sqlite3.connect(DB_PATH)
         Users_Train.to_sql("Users_Train", conn, if_exists="replace", index=False)
@@ -118,15 +127,27 @@ def etl_dag():
         Convierte las variables que contienen HTML a un string donde solo se tiene el texto contenido en ese HTML
         """
         conn = sqlite3.connect(DB_PATH)
+
         df = pd.read_sql(f"SELECT * FROM {table_name}", conn)
         if 'Users' in table_name:
-            df['AboutMe'] = df['AboutMe'].apply(lambda x: BeautifulSoup(x, "html.parser").get_text().strip() if isinstance(x, str) and x.strip() else pd.NA)
+            df['AboutMe'] = df['AboutMe'].apply
+            (
+                lambda x: BeautifulSoup(x, "html.parser").get_text().strip() if isinstance(x, str) and x.strip() else pd.NA
+            )
+
             df["AboutMe"] = df["AboutMe"].replace("", pd.NA)
+
         if 'Posts' in table_name:
-            df['Body'] = df['Body'].apply(lambda x: BeautifulSoup(x, "html.parser").get_text().lower() if isinstance(x, str) and x.strip() else pd.NA)
+            df['Body'] = df['Body'].apply
+            (
+                lambda x: BeautifulSoup(x, "html.parser").get_text().lower() if isinstance(x, str) and x.strip() else pd.NA
+            )
+
             df['Body'] = df['Body'].replace("", pd.NA)
+
         df.to_sql(table_name, conn, if_exists="replace", index=False)
         conn.close()
+
         return table_name
 
     @task()
@@ -192,6 +213,28 @@ def etl_dag():
         csv_path = f"data/processed/{table_name}.csv"
         df.to_csv(csv_path, index=False)
         print(f"DataFrame guardado en {csv_path}")
+
+
+    @task()
+    def LoadGraph(table_name: str):
+        """
+        Genera un gráfico interactivo del número de usuarios por país y lo guarda en formato html.
+        """
+        conn = sqlite3.connect(DB_PATH)
+        df = pd.read_sql(f"SELECT * FROM {table_name}", conn)
+        df = df["Location"]
+
+        counts = df.value_counts()
+        df = pd.DataFrame({"country": df.unique()[1:], "count":df.value_counts(sort = False)}, index = list(range(1, len(df.unique()))))
+        for country in df["country"]: df.loc[df["country"] == country, "count"] = counts[country]
+
+
+        fig = px.choropleth(df, locations="country",
+                            color="count",
+                            hover_name="country", 
+                            locationmode = "country names",
+                            color_continuous_scale=px.colors.sequential.OrRd)
+        plotly.offline.plot(fig, filename=f"data/processed/users_per_country.html")
     
     #-------------------------------------------------------------------------------------------------------------------
     # Obtener los nombres de las tablas
@@ -212,5 +255,7 @@ def etl_dag():
     posts_train_table = HTML_to_Text(table_name=posts_train_table)
     #posts_train_table = Parse_Tags(table_name=posts_train_table)
     LoadData(table_name=posts_train_table)
+
+    LoadGraph(table_name=users_train_table)
 
 etl_dag()
