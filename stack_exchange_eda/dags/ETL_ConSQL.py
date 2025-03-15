@@ -24,54 +24,48 @@ def etl_dag():
 
     @task(multiple_outputs=True)
     def GetData():
-        """
-        Esta función únicamente se ejecuta entera una vez o en caso de que se borren los datos. 
-        Se encarga de descargar, descomprimir y pasar a pickle los datos formato xml.
-        También crea un db en DB_PATH que se usará para el manejo de los dataframes.
-        Devuelve el nombre de los conjuntos que se usarán separados en train y test.
-        """
-        url = "https://archive.org/download/stackexchange/english.stackexchange.com.7z"
-
-        files = ["Users", "Posts"]
-        pathToData = os.path.abspath("data/raw")
-
-        for file in files:           
-
-            if f"{file}.pkl" not in os.listdir(pathToData):
-                
-                if f"{file}.xml" not in os.listdir(pathToData):
-
+            """
+            Esta función únicamente se ejecuta entera una vez o en caso de que se borren los datos. 
+            Se encarga de descargar, descomprimir y pasar a pickle los datos formato xml.
+            También crea un db en DB_PATH que se usará para el manejo de los dataframes.
+            Devuelve el nombre de los conjuntos que se usarán separados en train y test.
+            """
+            url = "https://archive.org/download/stackexchange/english.stackexchange.com.7z"
+            files = ["Users.xml", "Posts.xml"]
+            pathToData = "data/raw/"
+            archive = 0
+            
+            for file in files:
+                if file not in os.listdir(pathToData):
                     if "data.7z" not in os.listdir(pathToData):
-
-                        urlb.urlretrieve(url, f"{pathToData}/data.7z")
-
-                    archive = py7zr.SevenZipFile(f"{pathToData}/data.7z", 'r')
-                    archive.extract(path = pathToData, targets = [f"{file}.xml"])
+                        urlb.urlretrieve(url, str(pathToData) + "data.7z")
+                    archive = py7zr.SevenZipFile(str(pathToData) + "data.7z", 'r')
+                    archive.extract(path=pathToData, targets=[file])
                     archive.reset()
-                    archive.close()                     
+            
+            if archive != 0:
+                archive.close()
+            
+            Users = pd.read_pickle(os.path.abspath(str(pathToData) + "Users.pkl"))
+            Posts = pd.read_pickle(os.path.abspath(str(pathToData) + "Posts.pkl"))
 
-                pd.read_xml(f"{pathToData}/{file}.xml").to_pickle(f"{pathToData}/{file}.pkl")
+            Users_Train, Users_Test = train_test_split(Users, test_size=0.3)
+            Posts_Train, Posts_Test = train_test_split(Posts, test_size=0.3)
 
+            conn = sqlite3.connect(DB_PATH)
+            Users_Train.to_sql("Users_Train", conn, if_exists="replace", index=False)
+            Users_Test.to_sql("Users_Test", conn, if_exists="replace", index=False)
+            Posts_Train.to_sql("Posts_Train", conn, if_exists="replace", index=False)
+            Posts_Test.to_sql("Posts_Test", conn, if_exists="replace", index=False)
+            conn.close()
 
-        Users = pd.read_pickle(f"{pathToData}/Users.pkl")                                      
-        Posts = pd.read_pickle(f"{pathToData}/Posts.pkl")
+            return {
+                "Users_Train": "Users_Train",
+                "Users_Test": "Users_Test",
+                "Posts_Train": "Posts_Train",
+                "Posts_Test": "Posts_Test"
+            }
 
-        Users_Train, Users_Test = train_test_split(Users,test_size=0.3)
-        Posts_Train, Posts_Test = train_test_split(Posts,test_size=0.3)
-
-        conn = sqlite3.connect(DB_PATH)
-        Users_Train.to_sql("Users_Train", conn, if_exists="replace", index=False)
-        Users_Test.to_sql("Users_Test", conn, if_exists="replace", index=False)
-        Posts_Train.to_sql("Posts_Train", conn, if_exists="replace", index=False)
-        Posts_Test.to_sql("Posts_Test", conn, if_exists="replace", index=False)
-        conn.close()
-
-        return {
-            "Users_Train": "Users_Train",
-            "Users_Test": "Users_Test",
-            "Posts_Train": "Posts_Train",
-            "Posts_Test": "Posts_Test"
-        }
 
     @task()
     def RemoveNull(table_name: str):
