@@ -66,7 +66,6 @@ def etl_dag():
             "Posts_Test": "Posts_Test"
         }
 
-
     @task()
     def RemoveNull(table_name: str):
         """
@@ -121,27 +120,15 @@ def etl_dag():
         Convierte las variables que contienen HTML a un string donde solo se tiene el texto contenido en ese HTML
         """
         conn = sqlite3.connect(DB_PATH)
-
         df = pd.read_sql(f"SELECT * FROM {table_name}", conn)
         if 'Users' in table_name:
-            df['AboutMe'] = df['AboutMe'].apply
-            (
-                lambda x: BeautifulSoup(x, "html.parser").get_text().strip() if isinstance(x, str) and x.strip() else pd.NA
-            )
-
+            df['AboutMe'] = df['AboutMe'].apply(lambda x: BeautifulSoup(x, "html.parser").get_text().strip() if isinstance(x, str) and x.strip() else pd.NA)
             df["AboutMe"] = df["AboutMe"].replace("", pd.NA)
-
         if 'Posts' in table_name:
-            df['Body'] = df['Body'].apply
-            (
-                lambda x: BeautifulSoup(x, "html.parser").get_text().lower() if isinstance(x, str) and x.strip() else pd.NA
-            )
-
+            df['Body'] = df['Body'].apply(lambda x: BeautifulSoup(x, "html.parser").get_text().lower() if isinstance(x, str) and x.strip() else pd.NA)
             df['Body'] = df['Body'].replace("", pd.NA)
-
         df.to_sql(table_name, conn, if_exists="replace", index=False)
         conn.close()
-
         return table_name
 
     @task()
@@ -207,8 +194,7 @@ def etl_dag():
         csv_path = f"data/processed/{table_name}.csv"
         df.to_csv(csv_path, index=False)
         print(f"DataFrame guardado en {csv_path}")
-
-
+    
     @task()
     def LoadGraph(table_name: str):
         """
@@ -229,7 +215,8 @@ def etl_dag():
                             locationmode = "country names",
                             color_continuous_scale=px.colors.sequential.OrRd)
         plotly.offline.plot(fig, filename=f"data/processed/users_per_country.html")
-    
+        conn.close()
+     
     #-------------------------------------------------------------------------------------------------------------------
     # Obtener los nombres de las tablas
     data = GetData()
@@ -248,8 +235,9 @@ def etl_dag():
     posts_train_table = ConvertDates(table_name=posts_train_table)
     posts_train_table = HTML_to_Text(table_name=posts_train_table)
     #posts_train_table = Parse_Tags(table_name=posts_train_table)
+    
+    # Guardado de datos
     LoadData(table_name=posts_train_table)
-
     LoadGraph(table_name=users_train_table)
 
 etl_dag()

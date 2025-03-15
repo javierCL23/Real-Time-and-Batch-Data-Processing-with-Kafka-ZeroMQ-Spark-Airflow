@@ -1,7 +1,19 @@
 [project]
-name = "stack-exchange-dag"
+name = "proyectofinalentorno"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
-dependencies = []
+dependencies = [
+    "airflowctl>=0.2.11",
+    "apache-airflow>=2.9.3",
+    "beautifulsoup4>=4.13.3",
+    "lxml>=5.3.1",
+    "pandas>=2.2.3",
+    "pendulum>=3.0.0",
+    "plotly>=6.0.0",
+    "py7zr>=0.22.0",
+    "pyarrow>=19.0.1",
+    "pysqlite3-binary>=0.5.4",
+    "scikit-learn>=1.6.1",
+]
