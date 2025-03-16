@@ -11,8 +11,16 @@ import plotly
 from sklearn.model_selection import train_test_split
 import pendulum
 from airflow.decorators import dag, task
+import toml
 
-DB_PATH = '/tmp/airflow_etl.db'  # Base de datos local para Airflow
+
+
+config = toml.load("pyproject.toml")
+
+DB_PATH = config['project']['paths']['db_path']
+pathToData = config['project']['paths']['pathToData']
+countries_dict_path = config['project']['paths']['countries_dict_path']
+processed_data_path = config['project']['paths']['processed_data_path']
 
 @dag(
     schedule=None,
@@ -32,7 +40,6 @@ def etl_dag():
         """
         url = "https://archive.org/download/stackexchange/english.stackexchange.com.7z"
         files = ["Users.xml", "Posts.xml"]
-        pathToData = "data/raw/"
         archive = 0
         
         for file in files:
@@ -141,7 +148,7 @@ def etl_dag():
         conn = sqlite3.connect(DB_PATH)
         df = pd.read_sql(f"SELECT * FROM {table_name}", conn)
         
-        with open("data/paisesDict.json", "r", encoding="utf-8") as archivo:
+        with open(countries_dict_path, "r", encoding="utf-8") as archivo:
             countries = json.load(archivo)
 
         pattern_dict = {}
@@ -191,7 +198,7 @@ def etl_dag():
         conn.close()
         
         # Guardar el DataFrame en un archivo CSV
-        csv_path = f"data/processed/{table_name}.csv"
+        csv_path = os.path.join(processed_data_path, f"{table_name}.csv")
         df.to_csv(csv_path, index=False)
         print(f"DataFrame guardado en {csv_path}")
     
@@ -214,7 +221,7 @@ def etl_dag():
                             hover_name="country", 
                             locationmode = "country names",
                             color_continuous_scale=px.colors.sequential.OrRd)
-        plotly.offline.plot(fig, filename=f"data/processed/users_per_country.html")
+        plotly.offline.plot(fig, filename=os.path.join(processed_data_path, "users_per_country.html"))
         conn.close()
      
     #-------------------------------------------------------------------------------------------------------------------
