@@ -16,9 +16,10 @@ dependencies = [
     "pyarrow>=19.0.1",
     "pysqlite3-binary>=0.5.4",
     "scikit-learn>=1.6.1",
+    "toml>=0.10.2",
 ]
 
-[project.paths]
+[tools.project_paths]
 db_path = "/tmp/airflow_etl.db"
 pathToData = "data/raw/"
 countries_dict_path = "data/paisesDict.json"

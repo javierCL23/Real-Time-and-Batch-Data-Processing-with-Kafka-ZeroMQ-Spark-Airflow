@@ -14,9 +14,9 @@ toml_file_path = os.path.normpath(toml_file_path)
 config = toml.load(toml_file_path)
 
 # Acceder a las variables definidas en el TOML
-DB_PATH = config['project']['paths']['db_path']
-pathToData = config['project']['paths']['pathToData']
-countries_dict_path = config['project']['paths']['countries_dict_path']
-processed_data_path = config['project']['paths']['processed_data_path']
+DB_PATH = config['tools']['project_paths']['db_path']
+pathToData = config['tools']['project_paths']['pathToData']
+countries_dict_path = config['tools']['project_paths']['countries_dict_path']
+processed_data_path = config['tools']['project_paths']['processed_data_path']
 
 print(DB_PATH, pathToData, countries_dict_path, processed_data_path)

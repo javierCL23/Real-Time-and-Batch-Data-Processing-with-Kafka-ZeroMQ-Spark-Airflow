@@ -1,10 +1,11 @@
 import re
 import json
+import os
+
 from bs4 import BeautifulSoup
 import pandas as pd
 import urllib.request as urlb
 import py7zr
-import os
 import sqlite3
 import plotly.express as px
 import plotly
@@ -13,14 +14,12 @@ import pendulum
 from airflow.decorators import dag, task
 import toml
 
-
-
 config = toml.load("pyproject.toml")
 
-DB_PATH = config['project']['paths']['db_path']
-pathToData = config['project']['paths']['pathToData']
-countries_dict_path = config['project']['paths']['countries_dict_path']
-processed_data_path = config['project']['paths']['processed_data_path']
+DB_PATH = config['tools']['project_paths']['db_path']
+pathToData = config['tools']['project_paths']['pathToData']
+countries_dict_path = config['tools']['project_paths']['countries_dict_path']
+processed_data_path = config['tools']['project_paths']['processed_data_path']
 
 @dag(
     schedule=None,
@@ -208,15 +207,14 @@ def etl_dag():
         Genera un gráfico interactivo del número de usuarios por país y lo guarda en formato html.
         """
         conn = sqlite3.connect(DB_PATH)
-        df = pd.read_sql(f"SELECT * FROM {table_name}", conn)
-        df = df["Location"]
+        df = pd.read_sql(f"SELECT Location FROM {table_name}", conn)
 
+        
         counts = df.value_counts()
-        df = pd.DataFrame({"country": df.unique()[1:], "count":df.value_counts(sort = False)}, index = list(range(1, len(df.unique()))))
-        for country in df["country"]: df.loc[df["country"] == country, "count"] = counts[country]
+        countriesDf = pd.DataFrame(counts).reset_index()
+        countriesDf.columns = ["country","count"]
 
-
-        fig = px.choropleth(df, locations="country",
+        fig = px.choropleth(countriesDf, locations="country",
                             color="count",
                             hover_name="country", 
                             locationmode = "country names",
