@@ -4,12 +4,14 @@ import time
 import zmq
 from random import randint
 
+processName = "SINK"
+logger = logging.getLogger(processName)
 logging.basicConfig(
         filename='pruebas.log',
-        format="[{asctime}]:{levelname} - {message}",
+        format="|{name}|[{asctime}]:{levelname} - {message}",
         style="{", 
         datefmt="%Y-%m-%d %H:%M")
-logger = logging.getLogger("prueba")
+
 logger.setLevel(logging.INFO)
 
 logger.info('Started')
