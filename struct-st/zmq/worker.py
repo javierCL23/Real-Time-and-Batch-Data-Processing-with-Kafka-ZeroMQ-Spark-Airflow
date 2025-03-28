@@ -4,7 +4,7 @@ import sys
 from time import sleep
 
 if len(sys.argv) < 2:
-    raise("Se requiere un argumento para identificar el worker.")
+    raise ValueError("Se requiere un argumento para identificar el worker.")
 
 num = sys.argv[1]
 
