@@ -1,27 +1,29 @@
 import pandas as pd
-import re
+import zmq
+import json
 
-file_path = '../../data/processed/Users_Train.csv'
-
+# Cargar datos
+file_path = 'data/processed/Users_Train.csv'
 df = pd.read_csv(file_path)
 
+# Tomar muestra
 df_sample = df.sample(n=1000, random_state=42)
 
+# Reducir columnas
+df_sample_reduced = df_sample[['Id', 'CreationDate', 'Views', 'UpVotes']]
 
-# Mostrar las primeras filas de las columnas deseadas
-df_sample_reduced = df_sample[['Id', 'CreationDate', 'Views', 'UpVotes']].head()
+# Configurar ZeroMQ
+context = zmq.Context()
+sender = context.socket(zmq.PUSH)
+sender.bind("tcp://*:5557")  # Este bind es para que los workers se conecten
 
-# Enviar fila como string (por ejemplo a través de un socket ZeroMQ)
-for index, row in df_sample_reduced.iterrows():
-    row_string = row.to_string()  # Convirtiendo cada fila en una cadena
-    # row_string = row_string.replace('\t', '')  # Eliminando saltos de línea
-    # row_string = row_string.replace('\n', '|')  # Eliminando saltos de línea
-    #print(row_string)
-    # Aquí enviarías row_string al worker, usando un socket ZMQ, por ejemplo:
-    # socket.send_string(row_string)
-    parced = re.sub(" +"," ",row_string).split("\n")
-    parced = ([i.split(" ") for i in parced])
-    diccionario = {}
-    for elem in parced:
-        diccionario[elem[0]]=elem[1]
-    print(diccionario)
+# Enviar cada fila como JSON
+for _, row in df_sample_reduced.iterrows():
+    row_dict = {
+        "Id": int(row["Id"]),
+        "CreationDate": row["CreationDate"],
+        "Views": int(row["Views"]),
+        "UpVotes": int(row["UpVotes"])
+    }
+    row_json = json.dumps(row_dict)  # Convertir a JSON
+    sender.send_string(row_json)  # Enviar
