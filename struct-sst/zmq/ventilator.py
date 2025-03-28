@@ -1,6 +1,18 @@
 import pandas as pd
 import zmq
 import json
+import logging 
+
+# Configuración de logging
+processName = "VENTILATOR"
+logger = logging.getLogger(processName)
+logging.basicConfig(
+    filename='ventilator.log',
+    format="|{name}|[{asctime}]:{levelname} - {message}",
+    style="{", 
+    datefmt="%Y-%m-%d %H:%M"
+)
+logger.setLevel(logging.INFO)
 
 # Cargar datos
 file_path = 'data/processed/Users_Train.csv'
