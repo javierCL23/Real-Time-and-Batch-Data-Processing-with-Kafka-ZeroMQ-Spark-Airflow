@@ -3,6 +3,9 @@ import logging
 import sys 
 from time import sleep
 
+if len(sys.argv) < 2:
+    raise("Se requiere un argumento para identificar el worker.")
+
 num = sys.argv[1]
 
 processName = f"WORKER{num}"
@@ -32,9 +35,11 @@ poller.register(receiver, zmq.POLLIN)
 poller.register(controller, zmq.POLLIN)
 
 count = 0
+logger.info(f"Iniciando procesamiento en worker{num}.\n")
 while True:
 
-    if count%100 == 0: continue
+    if count%100 == 0:
+        logger.info(f"{count} items procesados.\n")
 
     socks = dict(poller.poll())
 
@@ -48,5 +53,6 @@ while True:
 
 
     if socks.get(controller) == zmq.POLLIN:
+        logger.info(f"Finalizando procesamiento en worker{num}.\n")
         break
     
