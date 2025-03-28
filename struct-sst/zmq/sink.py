@@ -1,7 +1,7 @@
 import logging
 import sys
 import zmq
-
+import json
 
 context = zmq.Context()
 
@@ -30,14 +30,14 @@ resultados = {}
 n_resultados = 0
 
 for i in range(n):
-    fecha = receiver.recv()
+    fecha = receiver.recv_string()
     if fecha in resultados:
         resultados[fecha]+=1
     else:
         resultados[fecha] = 1
     n_resultados += 1
     if n_resultados%100 == 0:
-        logger.info("Progress --> {n_resultados}/{n}")
+        logger.info(f"Progress --> {n_resultados}/{n}")
 
 
 #Finalización
@@ -46,5 +46,8 @@ controller.send(b"KILL")
 receiver.close()
 controller.close()
 context.term()
-
+print(resultados)
+with open('resultados.txt', 'w') as file:
+    file.write(json.dumps(resultados))
+    
 logger.info('Finished')
