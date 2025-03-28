@@ -47,9 +47,7 @@ while True:
     if socks.get(receiver) == zmq.POLLIN:
         message = json.loads(receiver.recv_string())
 
-        sleep(0.1)
-
-        sender.send_string(f"{message["CreationDate"].year}")
+        sender.send_string(f"{message['CreationDate'].split('-')[0]}")
         count += 1
 
 
