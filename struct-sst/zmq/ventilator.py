@@ -25,5 +25,7 @@ for _, row in df_sample_reduced.iterrows():
         "Views": int(row["Views"]),
         "UpVotes": int(row["UpVotes"])
     }
+    print(row_dict)
     row_json = json.dumps(row_dict)  # Convertir a JSON
+    print(row_json)
     sender.send_string(row_json)  # Enviar
