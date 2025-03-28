@@ -3,7 +3,7 @@ import zmq
 import json
 
 # Cargar datos
-file_path = '../../data/processed/Users_Train.csv'
+file_path = 'data/processed/Users_Train.csv'
 df = pd.read_csv(file_path)
 
 # Tomar muestra
