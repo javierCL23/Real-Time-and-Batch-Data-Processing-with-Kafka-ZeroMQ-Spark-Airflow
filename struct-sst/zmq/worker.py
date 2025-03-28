@@ -2,6 +2,7 @@ import zmq
 import logging
 import sys 
 from time import sleep
+import json
 
 if len(sys.argv) < 2:
     raise ValueError("Se requiere un argumento para identificar el worker.")
@@ -44,15 +45,15 @@ while True:
     socks = dict(poller.poll())
 
     if socks.get(receiver) == zmq.POLLIN:
-        message = receiver.recv_string()
+        message = json.loads(receiver.recv_string())
 
         sleep(0.1)
 
-        sender.send_string(f"{message.split()[1].year}")
+        sender.send_string(f"{message["CreationDate"].year}")
         count += 1
 
 
     if socks.get(controller) == zmq.POLLIN:
-        logger.info(f"Finalizando procesamiento en worker{num}.")
+        logger.info(f"Finalizando procesamiento en worker{num}.\n")
         break
     
