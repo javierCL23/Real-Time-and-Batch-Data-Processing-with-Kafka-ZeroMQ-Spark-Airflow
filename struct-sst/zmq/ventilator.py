@@ -29,6 +29,13 @@ context = zmq.Context()
 sender = context.socket(zmq.PUSH)
 sender.bind("tcp://*:5557")  # Este bind es para que los workers se conecten
 
+# Esperar que los workers estén listos
+print("Press Enter when the workers are ready: ")
+_ = input()  # Espera a que se presione Enter
+
+print("Sending tasks to workers...")
+logger.info("Workers are ready, sending tasks to workers...")
+
 # Enviar cada fila como JSON
 for _, row in df_sample_reduced.iterrows():
     row_dict = {
@@ -39,3 +46,7 @@ for _, row in df_sample_reduced.iterrows():
     }
     row_json = json.dumps(row_dict)  # Convertir a JSON
     sender.send_string(row_json)  # Enviar
+    logger.info(f"Sent row with Id: {row_dict['Id']} to workers")
+
+# Finalización
+logger.info("Ventilator finished sending tasks.")
