@@ -35,11 +35,11 @@ poller.register(receiver, zmq.POLLIN)
 poller.register(controller, zmq.POLLIN)
 
 count = 0
-logger.info(f"Iniciando procesamiento en worker{num}.\n")
+logger.info(f"Iniciando procesamiento en worker{num}.")
 while True:
 
     if count%100 == 0:
-        logger.info(f"{count} items procesados.\n")
+        logger.info(f"{count} items procesados.")
 
     socks = dict(poller.poll())
 
@@ -53,6 +53,6 @@ while True:
 
 
     if socks.get(controller) == zmq.POLLIN:
-        logger.info(f"Finalizando procesamiento en worker{num}.\n")
+        logger.info(f"Finalizando procesamiento en worker{num}.")
         break
     
