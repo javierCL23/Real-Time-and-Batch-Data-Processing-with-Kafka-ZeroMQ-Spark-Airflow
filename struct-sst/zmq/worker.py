@@ -52,6 +52,7 @@ while True:
 
 
     if socks.get(controller) == zmq.POLLIN:
-        logger.info(f"Finalizando procesamiento en worker{num}.\n")
+        logger.info(f"Finalizando procesamiento en worker{num}. {count} elementos procesados")
+
         break
     
