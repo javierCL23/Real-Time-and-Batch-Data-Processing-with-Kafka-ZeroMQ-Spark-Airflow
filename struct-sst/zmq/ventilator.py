@@ -4,12 +4,14 @@ import json
 import logging 
 import os
 
+if os.path.exists("struct-sst/zmq/ZMQ_logs.log"):
+    os.remove("struct-sst/zmq/ZMQ_logs.log")  # Borra el archivo al inicio
+
 # Configuración de logging
 processName = "VENTILATOR"
 logger = logging.getLogger(processName)
 logging.basicConfig(
-    filename='struct-sst/zmq/ventilator.log',
-    filemode='w',  # Para sobreescribir si ya existe el archivo
+    filename='struct-sst/zmq/ZMQ_logs.log',
     format="|{name}|[{asctime}]:{levelname} - {message}",
     style="{", 
     datefmt="%Y-%m-%d %H:%M"
@@ -31,13 +33,15 @@ context = zmq.Context()
 sender = context.socket(zmq.PUSH)
 sender.bind("tcp://*:5557")  # Este bind es para que los workers se conecten
 
+logger.info(f"Ventilator is ready to begin.")
 # Esperar que los workers estén listos
-print("Press Enter when the workers are ready: ")
+print("Press Enter when the workers and sink are ready: ")
 _ = input()  # Espera a que se presione Enter
 
 print("Sending tasks to workers...")
 logger.info("Workers are ready, sending tasks to workers...")
 
+i = 0
 # Enviar cada fila como JSON
 for _, row in df_sample_reduced.iterrows():
     row_dict = {
@@ -48,7 +52,9 @@ for _, row in df_sample_reduced.iterrows():
     }
     row_json = json.dumps(row_dict)  # Convertir a JSON
     sender.send_string(row_json)  # Enviar
-    logger.info(f"Sent row with Id: {row_dict['Id']} to workers")
+    i+=1
+    if i%100 == 0:
+        logger.info(f"{i}/1000 items where sent")
 
 # Finalización
 logger.info("Ventilator finished sending tasks.")

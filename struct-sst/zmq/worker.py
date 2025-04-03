@@ -5,15 +5,14 @@ from time import sleep
 import json
 
 if len(sys.argv) < 2:
-    raise ValueError("Se requiere un argumento para identificar el worker.")
+    raise ValueError("An argument is nedeed to identify the worker.")
 
-num = sys.argv[1]
+id = sys.argv[1]
 
-processName = f"WORKER{num}"
+processName = f"WORKER{id}"
 logger = logging.getLogger(processName)
 logging.basicConfig(
-    filename=f'struct-sst/zmq/worker{num}.log', #Un log por cada worker
-    filemode='w',  # Sobrescribir fichero
+    filename=f'struct-sst/zmq/ZMQ_logs.log', #Un log por cada worker
     format="|{name}|[{asctime}]:{levelname} - {message}",
     style="{", 
     datefmt="%Y-%m-%d %H:%M"
@@ -39,12 +38,8 @@ poller.register(receiver, zmq.POLLIN)
 poller.register(controller, zmq.POLLIN)
 
 count = 0
-logger.info(f"Iniciando procesamiento en worker{num}.")
+logger.info(f"Starting processing in worker{id}.")
 while True:
-
-    if count%100 == 0:
-        logger.info(f"{count} items procesados.")
-
     socks = dict(poller.poll())
 
     if socks.get(receiver) == zmq.POLLIN:
@@ -53,9 +48,11 @@ while True:
         sender.send_string(f"{message['CreationDate'][:4]}")
         count += 1
 
+    if count%100 == 0:
+        logger.info(f"{count} items were processed.")
+
 
     if socks.get(controller) == zmq.POLLIN:
-        logger.info(f"Finalizando procesamiento en worker{num}. {count} elementos procesados")
-
+        logger.info(f"Ending processing in worker{id}. {count} items processed")
         break
     

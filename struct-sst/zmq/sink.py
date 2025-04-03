@@ -17,8 +17,7 @@ controller.bind("tcp://*:5559")
 processName = "SINK"
 logger = logging.getLogger(processName)
 logging.basicConfig(
-        filename='struct-sst/zmq/sink.log',
-        filemode='w',  # Para sobreescribir si ya existe el archivo
+        filename='struct-sst/zmq/ZMQ_logs.log',
         format="|{name}|[{asctime}]:{levelname} - {message}",
         style="{", 
         datefmt="%Y-%m-%d %H:%M")
@@ -29,7 +28,7 @@ logger.setLevel(logging.INFO)
 n=1000
 resultados = {}
 n_resultados = 0
-
+logger.info(f"Sink is ready to recieve.")
 for i in range(n):
     fecha = receiver.recv_string()
     if fecha in resultados:
@@ -47,8 +46,8 @@ controller.send(b"KILL")
 receiver.close()
 controller.close()
 context.term()
-print(resultados)
-with open('struct-sst/zmq/resultados.txt', 'w') as file:
+
+with open('struct-sst/zmq/final-results.txt', 'w') as file:
     file.write(json.dumps(resultados))
     
-logger.info('Finished')
+logger.info('Sink Finished')
