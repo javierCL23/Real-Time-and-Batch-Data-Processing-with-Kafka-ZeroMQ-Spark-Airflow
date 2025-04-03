@@ -2,12 +2,14 @@ import pandas as pd
 import zmq
 import json
 import logging 
+import os
 
 # Configuración de logging
 processName = "VENTILATOR"
 logger = logging.getLogger(processName)
 logging.basicConfig(
-    filename='ventilator.log',
+    filename='struct-sst/zmq/ventilator.log',
+    filemode='w',  # Para sobreescribir si ya existe el archivo
     format="|{name}|[{asctime}]:{levelname} - {message}",
     style="{", 
     datefmt="%Y-%m-%d %H:%M"

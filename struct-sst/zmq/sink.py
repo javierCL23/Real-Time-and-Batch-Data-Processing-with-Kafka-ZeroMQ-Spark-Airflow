@@ -17,7 +17,8 @@ controller.bind("tcp://*:5559")
 processName = "SINK"
 logger = logging.getLogger(processName)
 logging.basicConfig(
-        filename='pruebas.log',
+        filename='struct-sst/zmq/sink.log',
+        filemode='w',  # Para sobreescribir si ya existe el archivo
         format="|{name}|[{asctime}]:{levelname} - {message}",
         style="{", 
         datefmt="%Y-%m-%d %H:%M")
@@ -47,7 +48,7 @@ receiver.close()
 controller.close()
 context.term()
 print(resultados)
-with open('resultados.txt', 'w') as file:
+with open('struct-sst/zmq/resultados.txt', 'w') as file:
     file.write(json.dumps(resultados))
     
 logger.info('Finished')

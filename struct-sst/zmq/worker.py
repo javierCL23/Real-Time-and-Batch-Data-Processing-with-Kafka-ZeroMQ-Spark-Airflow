@@ -12,10 +12,13 @@ num = sys.argv[1]
 processName = f"WORKER{num}"
 logger = logging.getLogger(processName)
 logging.basicConfig(
-        filename='pruebas.log',
-        format="|{name}|[{asctime}]:{levelname} - {message}",
-        style="{", 
-        datefmt="%Y-%m-%d %H:%M")
+    filename=f'struct-sst/zmq/worker{num}.log', #Un log por cada worker
+    filemode='w',  # Sobrescribir fichero
+    format="|{name}|[{asctime}]:{levelname} - {message}",
+    style="{", 
+    datefmt="%Y-%m-%d %H:%M"
+)
+
 logger.setLevel(logging.INFO)
 
 
