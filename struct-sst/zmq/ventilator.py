@@ -21,14 +21,8 @@ logging.basicConfig(
 )
 
 # Cargar datos
-file_path = 'data/processed/Users_Train.csv'
+file_path = 'struct-sst/data/stackexchange_users.csv'
 df = pd.read_csv(file_path)
-
-# Tomar muestra
-df_sample = df.sample(n=1000, random_state=42)
-
-# Reducir columnas
-df_sample_reduced = df_sample[['Id', 'CreationDate', 'Views', 'UpVotes']]
 
 # Configurar ZeroMQ
 context = zmq.Context()
@@ -45,7 +39,7 @@ logger.info("Workers are ready, sending tasks to workers...")
 
 i = 0
 # Enviar cada fila como JSON
-for _, row in df_sample_reduced.iterrows():
+for _, row in df.iterrows():
     row_dict = {
         "Id": int(row["Id"]),
         "CreationDate": row["CreationDate"],
@@ -60,3 +54,4 @@ for _, row in df_sample_reduced.iterrows():
 
 # Finalización
 logger.info("Ventilator finished sending tasks.")
+
