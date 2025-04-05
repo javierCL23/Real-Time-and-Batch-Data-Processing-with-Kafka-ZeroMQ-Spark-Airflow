@@ -12,14 +12,12 @@ id = sys.argv[1]
 processName = f"WORKER{id}"
 logger = logging.getLogger(processName)
 logging.basicConfig(
-    filename=f'struct-sst/zmq/ZMQ_logs.log', #Un log por cada worker
-    format="|{name}|[{asctime}]:{levelname} - {message}",
-    style="{", 
-    datefmt="%Y-%m-%d %H:%M"
+    filename=f'struct-sst/zmq/worker{id}.log',
+    filemode="w",
+    format="|%(name)s|[%(asctime)s.%(msecs)04d]:%(levelname)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    level=logging.INFO
 )
-
-logger.setLevel(logging.INFO)
-
 
 context = zmq.Context()
 

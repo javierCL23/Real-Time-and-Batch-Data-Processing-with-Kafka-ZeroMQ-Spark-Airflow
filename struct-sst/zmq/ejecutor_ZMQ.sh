@@ -1,0 +1,43 @@
+#!/bin/bash
+
+# Configuración
+NUM_WORKERS=3
+SCRIPT_DIR="struct-sst/zmq"       # Directorio de los scripts
+LOG_DIR="struct-sst/zmq"          # Directorio de logs
+FINAL_LOG="ZMQ_log.log"           # Nombre del log unificado
+
+# Limpieza inicial
+rm -f $LOG_DIR/*.log 2>/dev/null
+
+# Función de limpieza
+cleanup() {
+    echo "Terminando procesos..."
+    pkill -f "python.*(sink.py|worker.py|ventilator.py)" 2>/dev/null
+}
+trap cleanup EXIT INT TERM
+
+# 1. Iniciar Sink
+echo "Iniciando Sink..."
+python3 $SCRIPT_DIR/sink.py &
+SINK_PID=$!
+
+# 2. Iniciar Workers
+echo "Iniciando $NUM_WORKERS workers..."
+for i in $(seq 1 $NUM_WORKERS); do
+    python3 $SCRIPT_DIR/worker.py $i &
+done
+
+# 3. Iniciar Ventilator
+echo "Iniciando Ventilator..."
+python3 $SCRIPT_DIR/ventilator.py
+
+# 4. Esperar finalización del sink
+echo "Esperando finalización del pipeline..."
+wait $SINK_PID
+
+# 5. Unificar logs
+echo "Unificando logs..."
+cat $LOG_DIR/*.log | sort -t'[' -k2 > $LOG_DIR/$FINAL_LOG
+rm -f $LOG_DIR/ventilador.log $LOG_DIR/sink.log $LOG_DIR/worker*.log
+
+echo "Proceso completado. Log unificado: $LOG_DIR/$FINAL_LOG"

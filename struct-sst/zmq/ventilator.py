@@ -4,19 +4,21 @@ import json
 import logging 
 import os
 
-if os.path.exists("struct-sst/zmq/ZMQ_logs.log"):
+"""if os.path.exists("struct-sst/zmq/ZMQ_logs.log"):
     os.remove("struct-sst/zmq/ZMQ_logs.log")  # Borra el archivo al inicio
+"""
 
 # Configuración de logging
 processName = "VENTILATOR"
 logger = logging.getLogger(processName)
+
 logging.basicConfig(
-    filename='struct-sst/zmq/ZMQ_logs.log',
-    format="|{name}|[{asctime}]:{levelname} - {message}",
-    style="{", 
-    datefmt="%Y-%m-%d %H:%M"
+    filename='struct-sst/zmq/ventilador.log',
+    filemode="w",
+    format="|%(name)s|[%(asctime)s.%(msecs)04d]:%(levelname)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    level=logging.INFO
 )
-logger.setLevel(logging.INFO)
 
 # Cargar datos
 file_path = 'data/processed/Users_Train.csv'

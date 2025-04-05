@@ -17,13 +17,12 @@ controller.bind("tcp://*:5559")
 processName = "SINK"
 logger = logging.getLogger(processName)
 logging.basicConfig(
-        filename='struct-sst/zmq/ZMQ_logs.log',
-        format="|{name}|[{asctime}]:{levelname} - {message}",
-        style="{", 
-        datefmt="%Y-%m-%d %H:%M")
-
-logger.setLevel(logging.INFO)
-
+    filename='struct-sst/zmq/sink.log',
+    filemode="w",
+    format="|%(name)s|[%(asctime)s.%(msecs)04d]:%(levelname)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    level=logging.INFO
+)
 #----------------------MAIN--------------------------
 n=1000
 resultados = {}
