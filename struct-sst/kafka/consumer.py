@@ -43,7 +43,7 @@ config = {
 consumer = Consumer(config)
 
 topic_msg = "items-GR-1"                        #Topic para procesamiento de los datos
-topic_stop = "stop"  #Topic para control de parada de procesamiento
+topic_stop = "control-GR-1"  #Topic para control de parada de procesamiento
 consumer.subscribe([topic_msg, topic_stop])
 
 

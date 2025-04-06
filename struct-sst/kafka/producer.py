@@ -1,45 +1,82 @@
 import csv
 import time
-from kafka import KafkaProducer, KafkaAdminClient
-from kafka.admin import NewTopic
-from kafka.errors import TopicAlreadyExistsError
 import json
 import logging
+import os
+from confluent_kafka import Producer
+from confluent_kafka.admin import AdminClient, NewTopic
+from kafka.errors import TopicAlreadyExistsError
 
-logging.basicConfig(filename='producer.log', level=logging.INFO)
+# Configuración
+BROKER = '10.110.100.76:9092' 
+DATA_TOPIC = 'items-GR-1'
+CONTROL_TOPIC = 'control-GR-1'
+CSV_FILE = 'data/stackexchange_users.csv'
 
-TOPIC = 'items-GR-1'
-BROKER = '10.110.100.76:9092'
-CSV_FILE = '../data/stackexchange_users.csv'
+config = {
+    'bootstrap.servers': BROKER,
+}
 
-def create_topic():
-    admin = KafkaAdminClient(bootstrap_servers=BROKER)
-    try:
-        admin.delete_topics([TOPIC])
-        time.sleep(1)  # espera breve tras borrar
-    except Exception:
-        pass
-    try:
-        topic = NewTopic(name=TOPIC, num_partitions=3, replication_factor=1) #3 particiones porque hay 3 consumers, 1 réplica porque solo hay un broker
-        admin.create_topics([topic])
-        print(f"Topic {TOPIC} creado")
-    except TopicAlreadyExistsError:
-        print(f"Topic {TOPIC} ya existe")
+# Logging
+logging.basicConfig(
+    filename='struct-sst/kafka/producer.log',
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
+
+def create_topics():
+    admin = AdminClient(config)
+
+    for topic_name in [DATA_TOPIC, CONTROL_TOPIC]:
+        try:
+            topic = NewTopic(
+                topic_name,
+                num_partitions=3 if topic_name == DATA_TOPIC else 1,
+                replication_factor=1
+            )
+            admin.create_topics([topic])
+            print(f"Topic {topic_name} creado")
+        except TopicAlreadyExistsError:
+            print(f"Topic {topic_name} ya existe")
+
+def delivery_report(err, msg):
+    if err is not None:
+        logging.error(f"Error al enviar mensaje: {err}")
+    else:
+        logging.debug(f"Mensaje enviado a {msg.topic()} [{msg.partition()}]")
 
 def run_producer():
-    create_topic()
-    producer = KafkaProducer(
-        bootstrap_servers=BROKER,
-        value_serializer=lambda v: json.dumps(v).encode('utf-8')
-    )
-    with open(CSV_FILE, newline='', encoding='utf-8') as f:
-        reader = csv.DictReader(f)
-        for i, row in enumerate(reader):
-            producer.send(TOPIC, row)
-            if i % 100 == 0:
-                logging.info(f"{i} elementos enviados")
-        producer.flush()
-        logging.info("Todos los elementos han sido enviados")
+    create_topics()
+
+    producer = Producer({'bootstrap.servers': BROKER})
+
+    try:
+        with open(CSV_FILE, newline='', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            for i, row in enumerate(reader):
+                producer.produce(
+                    topic=DATA_TOPIC,
+                    value=json.dumps(row).encode('utf-8'),
+                    callback=delivery_report
+                )
+                if i % 100 == 0:
+                    logging.info(f"{i} elementos enviados")
+                producer.poll(0)
+
+            # Avisa a los consumers de que ya no hay más mensajes
+            producer.produce(
+                topic=CONTROL_TOPIC,
+                value=json.dumps("END").encode('utf-8'),
+                callback=delivery_report
+            )
+            logging.info("Mensaje de fin enviado al topic de control")
+
+            producer.flush()
+            logging.info("Todos los mensajes han sido enviados y flush realizado")
+    except FileNotFoundError:
+        logging.error(f"El archivo {CSV_FILE} no se encontró.")
+    except Exception as e:
+        logging.error(f"Error al leer el archivo CSV: {e}")
 
 if __name__ == '__main__':
     run_producer()

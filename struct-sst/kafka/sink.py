@@ -11,7 +11,7 @@ reciever.bind("tcp://*:5557")
 processName = "SINK"
 logger = logging.getLogger(processName)
 logging.basicConfig(
-    filename='struct-sst/zmq/sink_kafka.log',
+    filename='struct-sst/kafka/sink_kafka.log',
     filemode="w",
     format="|%(name)s|[%(asctime)s.%(msecs)04d]:%(levelname)s - %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
@@ -35,7 +35,7 @@ for i in range(3):
 reciever.close()
 context.term()
 
-with open('struct-sst/zmq/final-results_kafka.txt', 'w') as file:
+with open('struct-sst/kafka/final-results_kafka.txt', 'w') as file:
     file.write(json.dumps(final_results))
 
 logger.info('Sink Finished')
