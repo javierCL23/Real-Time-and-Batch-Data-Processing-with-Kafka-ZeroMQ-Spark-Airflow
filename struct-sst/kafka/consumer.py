@@ -26,9 +26,9 @@ sender.connect("tcp://localhost:5557")
 # -------------------------------- Kafka ------------------------------------------
 config = {
     'bootstrap.servers': 'docker01.aulas.eif.urjc.es:9092',
-    'group.id':          'kafka-python-getting-started',
+    'group.id':          'consumers-kafka',
     'enable.auto.commit': 'false',
-    'auto.offset.reset': 'earliest'
+    'auto.offset.reset': 'latest'
 }
 
 consumer = Consumer(config)
@@ -46,16 +46,18 @@ while True:
         if message.error():
             print(f"ERROR: {message.error()}")
         else:
-
-            if count%100 == 0:
-                logger.info(f"{count} items were processed.")
-
             if message.topic() == topic_stop:
                 sender.send_json(results)
                 logger.info(f"Ending processing in worker{id}. {count} items processed")
                 break
             else:
-                if message.value() in results: results[message.value()] += 1
-                else: results[message.value()] = 1
+                if message.value() in results:
+                    results[message.value()] += 1
+                else:
+                    results[message.value()] = 1
+                count+=1
+                
+            if count%100 == 0:
+                logger.info(f"{count} items were processed.")
 
 

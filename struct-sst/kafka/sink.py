@@ -1,6 +1,5 @@
 import logging
 import zmq
-import sys
 import json
 
 context = zmq.Context()
@@ -21,7 +20,7 @@ logging.basicConfig(
 
 # Proceso de ZMQ
 final_results = {}
-logging.info("Sink ready to recieve messages.")
+logging.info("Sink ready to recieve results.")
 for i in range(3):
     results = reciever.recv_json()
     for year,count in results.items():
