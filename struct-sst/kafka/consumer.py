@@ -1,4 +1,5 @@
 from confluent_kafka import Consumer
+import json
 import logging
 import sys 
 import zmq
@@ -47,7 +48,7 @@ while True:
             print(f"ERROR: {message.error()}")
         else:
             if message.topic() == topic_stop:
-                sender.send_json(results)
+                sender.send_json(json.dumps(results))
                 logger.info(f"Ending processing in worker{id}. {count} items processed.")
                 break
             else:
