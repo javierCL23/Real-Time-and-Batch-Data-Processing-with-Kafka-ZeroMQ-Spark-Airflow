@@ -27,17 +27,20 @@ logging.basicConfig(
 def create_topics():
     admin = AdminClient(config)
 
-    for topic_name in [DATA_TOPIC, CONTROL_TOPIC]:
+    topics = [
+        NewTopic(DATA_TOPIC, num_partitions=3, replication_factor=1),
+        NewTopic(CONTROL_TOPIC, num_partitions=1, replication_factor=1)
+    ]
+
+    futures = admin.create_topics(topics)
+
+    for topic, future in futures.items():
         try:
-            topic = NewTopic(
-                topic_name,
-                num_partitions=3 if topic_name == DATA_TOPIC else 1,
-                replication_factor=1
-            )
-            admin.create_topics([topic])
-            print(f"Topic {topic_name} creado")
-        except TopicAlreadyExistsError:
-            print(f"Topic {topic_name} ya existe")
+            future.result() 
+            print(f"Topic {topic} creado")
+        except Exception as e:
+            print(f"No se pudo crear el topic {topic}: {e}")
+
 
 def delivery_report(err, msg):
     if err is not None:
