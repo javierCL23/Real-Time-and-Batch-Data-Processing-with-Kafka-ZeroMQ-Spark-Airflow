@@ -1,26 +1,42 @@
-import zmq
-import json
 import logging
+import zmq
+import sys
+import json
 
-logging.basicConfig(filename='sink.log', level=logging.INFO)
+context = zmq.Context()
 
-ctx = zmq.Context()
-socket = ctx.socket(zmq.PULL)
-socket.bind("tcp://*:5557")
+# Puerto desde el que recibirá mensajes de los consumers
+reciever = context.socket(zmq.PULL)
+reciever.bind("tcp://*:5557")
 
+processName = "SINK"
+logger = logging.getLogger(processName)
+logging.basicConfig(
+    filename='struct-sst/zmq/sink_kafka.log',
+    filemode="w",
+    format="|%(name)s|[%(asctime)s.%(msecs)04d]:%(levelname)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    level=logging.INFO
+)
+
+# Proceso de ZMQ
 final_results = {}
+logging.info("Sink ready to recieve messages.")
+for i in range(3):
+    results = reciever.recv_json()
+    for year,count in results.items():
+        if year in final_results:
+            final_results[year]+=count
+        else:
+            final_results[year]=count
+    logging.info(f"{i}/3 Messages Recieved.")
 
-for _ in range(3):  # Esperamos 3 consumidores
-    message = socket.recv_json()
-    consumer_id = message['consumer']
-    results = message['results']
-    for year, count in results.items():
-        final_results[year] = final_results.get(year, 0) + count
-    logging.info(f"Recibido de consumer {consumer_id}: {results}")
 
-# Escribir resultados totales
-with open('final-results-kafka.txt', 'w') as f:
-    for year in sorted(final_results):
-        f.write(f"{year}: {final_results[year]}\n")
+#Finalización
+reciever.close()
+context.term()
 
-logging.info("Sink ha terminado de escribir los resultados")
+with open('struct-sst/zmq/final-results_kafka.txt', 'w') as file:
+    file.write(json.dumps(final_results))
+
+logger.info('Sink Finished')
