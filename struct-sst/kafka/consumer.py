@@ -39,6 +39,7 @@ consumer.subscribe([topic_msg, topic_stop])
 
 
 results = dict()
+count = 0
 while True:
         message = consumer.poll(1.0)
 
@@ -51,6 +52,8 @@ while True:
 
             if message.topic() == topic_stop:
                 sender.send_json(results)
+                logger.info(f"Ending processing in worker{id}. {count} items processed")
+                break
             else:
                 if message.value() in results: results[message.value()] += 1
                 else: results[message.value()] = 1
