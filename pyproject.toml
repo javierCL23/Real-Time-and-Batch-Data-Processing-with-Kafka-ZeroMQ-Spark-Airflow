@@ -19,6 +19,7 @@ dependencies = [
     "pyzmq>=26.3.0",
     "scikit-learn>=1.6.1",
     "toml>=0.10.2",
+    "ujson>=5.10.0",
 ]
 
 [tools.project_paths]
