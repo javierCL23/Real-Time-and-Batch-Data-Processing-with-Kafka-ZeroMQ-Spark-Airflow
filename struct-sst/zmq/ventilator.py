@@ -13,7 +13,7 @@ processName = "VENTILATOR"
 logger = logging.getLogger(processName)
 
 logging.basicConfig(
-    filename='struct-sst/zmq/ventilador.log',
+    filename='struct-sst/zmq/ventilador_zmq.log',
     filemode="w",
     format="|%(name)s|[%(asctime)s.%(msecs)04d]:%(levelname)s - %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
@@ -21,7 +21,7 @@ logging.basicConfig(
 )
 
 # Cargar datos
-file_path = 'struct-sst/data/stackexchange_users.csv'
+file_path = 'data/processed/UsersSubsample.csv'
 df = pd.read_csv(file_path)
 
 # Configurar ZeroMQ

@@ -6,8 +6,8 @@ import json
 context = zmq.Context()
 
 # Recibir mensajes
-receiver = context.socket(zmq.PULL)
-receiver.bind("tcp://*:5558")
+reciever = context.socket(zmq.PULL)
+reciever.bind("tcp://*:5558")
 
 # Control de workers
 controller = context.socket(zmq.PUB)
@@ -17,7 +17,7 @@ controller.bind("tcp://*:5559")
 processName = "SINK"
 logger = logging.getLogger(processName)
 logging.basicConfig(
-    filename='struct-sst/zmq/sink.log',
+    filename='struct-sst/zmq/sink_zmq.log',
     filemode="w",
     format="|%(name)s|[%(asctime)s.%(msecs)04d]:%(levelname)s - %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
@@ -29,7 +29,7 @@ resultados = {}
 n_resultados = 0
 logger.info(f"Sink is ready to recieve.")
 for i in range(n):
-    fecha = receiver.recv_string()
+    fecha = reciever.recv_string()
     if fecha in resultados:
         resultados[fecha]+=1
     else:
@@ -42,11 +42,11 @@ for i in range(n):
 #Finalización
 controller.send(b"KILL")
 
-receiver.close()
+reciever.close()
 controller.close()
 context.term()
 
-with open('struct-sst/zmq/final-results.txt', 'w') as file:
+with open('struct-sst/zmq/final-results_zmq.txt', 'w') as file:
     file.write(json.dumps(resultados))
     
 logger.info('Sink Finished')

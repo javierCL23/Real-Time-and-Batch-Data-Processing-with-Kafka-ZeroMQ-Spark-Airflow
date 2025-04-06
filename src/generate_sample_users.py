@@ -13,7 +13,7 @@ df_sample = df.sample(n=1000, random_state=42)
 df_sample_reduced = df_sample[['Id', 'CreationDate', 'Views', 'UpVotes']]
 
 # Guardar CSV reducido
-output_path = 'struct-sst/data/stackexchange_users.csv'
+output_path = 'data/processed/UsersSubsample.csv'
 df_sample_reduced.to_csv(output_path, index=False)
 
 print(f"Archivo guardado en: {output_path}")

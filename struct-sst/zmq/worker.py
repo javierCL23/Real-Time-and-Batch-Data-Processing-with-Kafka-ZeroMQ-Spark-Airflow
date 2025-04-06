@@ -12,7 +12,7 @@ id = sys.argv[1]
 processName = f"WORKER{id}"
 logger = logging.getLogger(processName)
 logging.basicConfig(
-    filename=f'struct-sst/zmq/worker{id}.log',
+    filename=f'struct-sst/zmq/worker{id}_zmq.log',
     filemode="w",
     format="|%(name)s|[%(asctime)s.%(msecs)04d]:%(levelname)s - %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",

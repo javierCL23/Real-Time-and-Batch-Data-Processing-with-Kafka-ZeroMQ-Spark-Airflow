@@ -37,7 +37,7 @@ wait $SINK_PID
 
 # 5. Unificar logs
 echo "Unificando logs..."
-cat $LOG_DIR/*.log | sort -t'[' -k2 > $LOG_DIR/$FINAL_LOG
-rm -f $LOG_DIR/ventilador.log $LOG_DIR/sink.log $LOG_DIR/worker*.log
+cat $LOG_DIR/*_zmq.log | sort -t'[' -k2 > $LOG_DIR/$FINAL_LOG
+rm -f $LOG_DIR/ventilador_zmq.log $LOG_DIR/sink_zmq.log $LOG_DIR/worker*_zmq.log
 
 echo "Proceso completado. Log unificado: $LOG_DIR/$FINAL_LOG"
