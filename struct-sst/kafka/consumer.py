@@ -48,16 +48,20 @@ while True:
         else:
             if message.topic() == topic_stop:
                 sender.send_json(results)
-                logger.info(f"Ending processing in worker{id}. {count} items processed")
+                logger.info(f"Ending processing in worker{id}. {count} items processed.")
                 break
             else:
-                if message.value() in results:
-                    results[message.value()] += 1
+                result = message.value()['CreationDate'][:4]
+                if result in results:
+                    results[result] += 1
                 else:
-                    results[message.value()] = 1
-                count+=1
+                    results[result] = 1
                 
             if count%100 == 0:
                 logger.info(f"{count} items were processed.")
+            count+=1
+
+consumer.unsubscribe()
+consumer.close()
 
 
