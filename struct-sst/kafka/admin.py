@@ -9,7 +9,7 @@ admin = AdminClient(config)
 
 topics_to_reset = ["items-GR-1", "control-GR-1"]
 
-# Eliminar los topics
+# Eliminar los topic
 print("Deleting topics...")
 delete_futures = admin.delete_topics(topics_to_reset, operation_timeout=30)
 
