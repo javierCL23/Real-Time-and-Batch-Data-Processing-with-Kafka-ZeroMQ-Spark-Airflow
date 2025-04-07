@@ -10,9 +10,8 @@ import ujson
 import pyarrow as pa
 import pyarrow.parquet as pq
 
-if len(sys.argv) < 2:
-    if (sys.argv[1] not in ["0","1","2"]):
-        raise ValueError("An argument between 0 and 2 is nedeed to identify the consumer.")
+if len(sys.argv) < 2 or sys.argv[1] not in ["0", "1", "2"]:
+    raise ValueError("An argument between 0 and 2 is needed to identify the consumer.")
 
 id = sys.argv[1]
 
@@ -25,6 +24,7 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S",
     level=logging.INFO
 )
+
 
 # -------------------------------- ZMQ ------------------------------------------
 
@@ -43,23 +43,26 @@ config = {
 consumer = Consumer(config)
 
 topic_msg = "items-GR-1"                        #Topic para procesamiento de los datos
-topic_stop = "control-GR-1"  #Topic para control de parada de procesamiento
+topic_stop = "control-GR-1"                     #Topic para control de parada de procesamiento
 consumer.subscribe([topic_msg, topic_stop])
 
 
-results = dict()
+results = {}
 count = 0
 still_data = True
 
 while still_data:
         message = consumer.poll(1.0)
-        if message.error():
+        if message is None:
+            print("Waiting...")
+        elif message.error():
             logging.error(f"ERROR: {message.error()}")
         else:
             #Si ya no quedan datos por procesar se debe parar
             if message.topic() == topic_stop:
-                sender.send_json(json.dumps(results))
+                sender.send_json(results)
                 logger.info(f"Ending processing in worker{id}. {count} items processed.")
+                consumer.commit(message=message, asynchronous = False)
                 still_data = False
             #Procesado de los datos
             else:
@@ -72,13 +75,20 @@ while still_data:
                 consumer.commit(message=message)
                 count+=1
             #Logs
-            if count%100 == 0:
+            if count%100 == 0 and still_data:
                 logger.info(f"{count} items were processed.")
             
 #Cerramos comunicaciones en ZMQ y Kafka
+print("CERRANDO KAFKA")
 consumer.unsubscribe()
 consumer.close()
-context.term()
+logging.info(f"Consumer{id} has unsubscribe")
+
+print("CERRANDO ZMQ")
+sender.close()
+print("FUERA ZMQ")
+logging.info(f"Consumer{id} has close comunication from ZMQ")
+
 
 #Medición de tiempos con diferentes librerías:
 start = time.time()
@@ -107,10 +117,7 @@ match id:
         pq.write_table(table, "PARQUET.parquet")
         
         ending = time.time()
-        logger.info(f"Elapsed time to write results with PARQUET : {ending-start}s ({start_write}s real time).")
+        logger.info(f"Elapsed time to write results with PARQUET : {ending-start}s ({ending-start_write}s real time).")
     case _:
+        #Nunca llegará aquí, pero por seguridad
         print(f"ERROR: id:{id} is not a valid option.")
-
-
-
-

@@ -2,11 +2,12 @@ import logging
 import zmq
 import json
 
+import time
 context = zmq.Context()
 
 # Puerto desde el que recibirá mensajes de los consumers
-reciever = context.socket(zmq.PULL)
-reciever.bind("tcp://*:5557")
+receiver = context.socket(zmq.PULL)
+receiver.bind("tcp://*:5557")
 
 processName = "SINK"
 logger = logging.getLogger(processName)
@@ -18,24 +19,26 @@ logging.basicConfig(
     level=logging.INFO
 )
 
+print("Waiting for results")
 # Proceso de ZMQ
 final_results = {}
-logging.info("Sink ready to recieve results.")
+logger.info("Sink ready to receive results.")
 for i in range(3):
-    results = reciever.recv_json()
+    results = receiver.recv_json()
+    print(results)
     for year,count in results.items():
         if year in final_results:
             final_results[year]+=count
         else:
             final_results[year]=count
-    logging.info(f"{i}/3 Messages Recieved.")
+    logger.info(f"{i+1}/3 Messages Received.")
 
 
 #Finalización
-reciever.close()
+receiver.close()
 context.term()
 
-with open('struct-sst/kafka/final-results_kafka.txt', 'w') as file:
-    file.write(json.dumps(final_results))
+with open('final-results_kafka.txt', 'w') as file:
+    json.dump(dict(sorted(final_results.items())), file, indent=2)
 
 logger.info('Sink Finished')
