@@ -47,6 +47,6 @@ controller.close()
 context.term()
 
 with open('struct-sst/zmq/final-results_zmq.txt', 'w') as file:
-    file.write(json.dumps(resultados))
+    json.dump(dict(sorted(resultados.items())),file,indent=2)
     
 logger.info('Sink Finished')
