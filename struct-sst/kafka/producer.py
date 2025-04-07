@@ -1,85 +1,52 @@
-import csv
-import time
-import json
-import logging
-import os
 from confluent_kafka import Producer
-from confluent_kafka.admin import AdminClient, NewTopic
-from kafka.errors import TopicAlreadyExistsError
+import json
+import time
+import logging
+import csv
 
-# Configuración
-BROKER = '10.110.100.76:9092' 
-DATA_TOPIC = 'items-GR-1'
-CONTROL_TOPIC = 'control-GR-1'
-CSV_FILE = 'data/stackexchange_users.csv'
-
-config = {
-    'bootstrap.servers': BROKER,
-}
-
-# Logging
+# Configuración del logger
+logger = logging.getLogger("PRODUCER")
 logging.basicConfig(
-    filename='struct-sst/kafka/producer.log',
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
+    filename='kafka/producer.log',
+    filemode="w",
+    format="|%(name)s|[%(asctime)s.%(msecs)04d]:%(levelname)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    level=logging.INFO
 )
 
-def create_topics():
-    admin = AdminClient(config)
+# Configurar el productor Kafka
+conf = {
+    'bootstrap.servers': 'docker01.aulas.eif.urjc.es:9092'
+}
 
-    topics = [
-        NewTopic(DATA_TOPIC, num_partitions=3, replication_factor=1),
-        NewTopic(CONTROL_TOPIC, num_partitions=1, replication_factor=1)
-    ]
+producer = Producer(conf)
 
-    futures = admin.create_topics(topics)
-
-    for topic, future in futures.items():
-        try:
-            future.result() 
-            print(f"Topic {topic} creado")
-        except Exception as e:
-            print(f"No se pudo crear el topic {topic}: {e}")
-
-
+# Callback para manejar confirmaciones
 def delivery_report(err, msg):
     if err is not None:
-        logging.error(f"Error al enviar mensaje: {err}")
+        logger.error(f"Message delivery failed: {err}")
     else:
-        logging.debug(f"Mensaje enviado a {msg.topic()} [{msg.partition()}]")
+        logger.info(f"Message delivered to {msg.topic()} [{msg.partition()}]")
 
-def run_producer():
-    create_topics()
+# Leer datos del CSV
+with open("data/UsersSubsample.csv", "r", encoding="utf-8") as f:
+    reader = csv.DictReader(f)
+    items = list(reader)  # Convertimos el lector a una lista de diccionarios
 
-    producer = Producer({'bootstrap.servers': BROKER})
+# Enviar cada item al topic
+for i, item in enumerate(items[:1000]):
+    producer.produce("items-GR-1", json.dumps(item).encode("utf-8"), callback=delivery_report)
+    if i % 100 == 0:
+        logger.info(f"{i} items enviados.")
+    producer.poll(0.1)  # Importante para hacer el envío
 
-    try:
-        with open(CSV_FILE, newline='', encoding='utf-8') as f:
-            reader = csv.DictReader(f)
-            for i, row in enumerate(reader):
-                producer.produce(
-                    topic=DATA_TOPIC,
-                    value=json.dumps(row).encode('utf-8'),
-                    callback=delivery_report
-                )
-                if i % 100 == 0:
-                    logging.info(f"{i} elementos enviados")
-                producer.poll(0)
+# Esperamos a que todos los mensajes se envíen
+producer.flush()
+logger.info("Todos los ítems enviados.")
 
-            # Avisa a los consumers de que ya no hay más mensajes
-            producer.produce(
-                topic=CONTROL_TOPIC,
-                value=json.dumps("END").encode('utf-8'),
-                callback=delivery_report
-            )
-            logging.info("Mensaje de fin enviado al topic de control")
-
-            producer.flush()
-            logging.info("Todos los mensajes han sido enviados y flush realizado")
-    except FileNotFoundError:
-        logging.error(f"El archivo {CSV_FILE} no se encontró.")
-    except Exception as e:
-        logging.error(f"Error al leer el archivo CSV: {e}")
-
-if __name__ == '__main__':
-    run_producer()
+# Enviar mensaje de parada al topic de control para cada consumidor
+for i in range(3):
+    producer.produce("control-GR-1", key=f"stop-{i}", value="STOP".encode("utf-8"), callback=delivery_report)
+    producer.poll(0)
+logger.info("Mensajes de parada enviados.")
+producer.flush()
