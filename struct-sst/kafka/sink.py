@@ -38,7 +38,7 @@ for i in range(3):
 receiver.close()
 context.term()
 
-with open('final-results_kafka.txt', 'w') as file:
+with open('struct-sst/kafka/final-results_kafka.txt', 'w') as file:
     json.dump(dict(sorted(final_results.items())), file, indent=2)
 
 logger.info('Sink Finished')

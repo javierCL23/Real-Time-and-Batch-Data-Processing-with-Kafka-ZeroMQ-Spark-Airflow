@@ -18,7 +18,7 @@ id = sys.argv[1]
 processName = f"CONSUMER{id}"
 logger = logging.getLogger(processName)
 logging.basicConfig(
-    filename=f'struct-sst/kafka/consumer{id}.log',
+    filename=f'struct-sst/kafka/consumer{id}_kafka.log',
     filemode="w",
     format="|%(name)s|[%(asctime)s.%(msecs)04d]:%(levelname)s - %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
@@ -94,13 +94,13 @@ logging.info(f"Consumer{id} has close comunication from ZMQ")
 start = time.time()
 match id:
     case "0":   #JSON
-        with open("JSON.json","w") as f:
+        with open("struct-sst/kafka/JSON.json","w") as f:
             json.dump(results,f)
         
         ending = time.time()
         logger.info(f"Elapsed time to write results with JSON : {ending-start}s.")
     case "1":   #UJSON
-        with open("UJSON.json","w") as f:
+        with open("struct-sst/kafka/UJSON.json","w") as f:
             ujson.dump(results,f)
         
         ending = time.time()
@@ -114,7 +114,7 @@ match id:
         
         table = pa.table([year_array, value_array], names=["year", "value"])
         start_write = time.time()
-        pq.write_table(table, "PARQUET.parquet")
+        pq.write_table(table, "struct-sst/kafka/PARQUET.parquet")
         
         ending = time.time()
         logger.info(f"Elapsed time to write results with PARQUET : {ending-start}s ({ending-start_write}s real time).")
