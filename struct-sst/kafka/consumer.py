@@ -19,6 +19,7 @@ processName = f"CONSUMER{id}"
 logger = logging.getLogger(processName)
 logging.basicConfig(
     filename=f'struct-sst/kafka/consumer{id}_kafka.log',
+    #filename=f'consumer{id}_kafka.log',
     filemode="w",
     format="|%(name)s|[%(asctime)s.%(msecs)04d]:%(levelname)s - %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
@@ -37,7 +38,8 @@ config = {
     'bootstrap.servers': 'docker01.aulas.eif.urjc.es:9092',
     'group.id':          'consumers-kafka',             #Necesitan todos estar en mismo grupo para no solapar lecturas
     'enable.auto.commit': 'false',                      #En caso de error, los mensajes no se pierden
-    'auto.offset.reset': 'latest'                       #Como no se procesarán los mensajes repetidas veces no es necesario tener earliest
+    'auto.offset.reset': 'latest',                       #Como no se procesarán los mensajes repetidas veces no es necesario tener earliest
+    'isolation.level': 'read_committed'
 }
 
 consumer = Consumer(config)
@@ -46,7 +48,7 @@ topic_msg = "items-GR-1"                        #Topic para procesamiento de los
 topic_stop = "control-GR-1"                     #Topic para control de parada de procesamiento
 consumer.subscribe([topic_msg, topic_stop])
 
-
+logger.info(f"Consumer {id} ready to process data.")
 results = {}
 count = 0
 still_data = True
@@ -61,7 +63,7 @@ while still_data:
             #Si ya no quedan datos por procesar se debe parar
             if message.topic() == topic_stop:
                 sender.send_json(results)
-                logger.info(f"Ending processing in worker{id}. {count} items processed.")
+                logger.info(f"Ending processing in consumer {id}. {count} items processed.")
                 consumer.commit(message=message, asynchronous = False)
                 still_data = False
             #Procesado de los datos
@@ -78,30 +80,21 @@ while still_data:
             if count%100 == 0 and still_data:
                 logger.info(f"{count} items were processed.")
             
-#Cerramos comunicaciones en ZMQ y Kafka
-print("CERRANDO KAFKA")
-consumer.unsubscribe()
-consumer.close()
-logging.info(f"Consumer{id} has unsubscribe")
-
-print("CERRANDO ZMQ")
-sender.close()
-print("FUERA ZMQ")
-logging.info(f"Consumer{id} has close comunication from ZMQ")
-
 
 #Medición de tiempos con diferentes librerías:
 start = time.time()
 match id:
     case "0":   #JSON
         with open("struct-sst/kafka/JSON.json","w") as f:
-            json.dump(results,f)
+        #with open("JSON.json","w") as f:
+            json.dump(dict(sorted(results.items())),f,indent=2)
         
         ending = time.time()
         logger.info(f"Elapsed time to write results with JSON : {ending-start}s.")
     case "1":   #UJSON
         with open("struct-sst/kafka/UJSON.json","w") as f:
-            ujson.dump(results,f)
+        #with open("UJSON.json","w") as f:
+            ujson.dump(dict(sorted(results.items())),f,indent=2)
         
         ending = time.time()
         logger.info(f"Elapsed time to write results with UJSON : {ending-start}s.")
@@ -115,9 +108,20 @@ match id:
         table = pa.table([year_array, value_array], names=["year", "value"])
         start_write = time.time()
         pq.write_table(table, "struct-sst/kafka/PARQUET.parquet")
-        
+        #pq.write_table(table, "PARQUET.parquet")
         ending = time.time()
         logger.info(f"Elapsed time to write results with PARQUET : {ending-start}s ({ending-start_write}s real time).")
     case _:
         #Nunca llegará aquí, pero por seguridad
         print(f"ERROR: id:{id} is not a valid option.")
+
+
+
+#Cerramos comunicaciones en ZMQ y Kafka 
+consumer.unsubscribe()
+consumer.close()
+logger.info(f"Consumer {id} has unsubscribe")
+
+sender.close()
+logger.info(f"Consumer {id} has close comunication from ZMQ")
+logger.info(f"Consumer {id} Finished")

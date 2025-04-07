@@ -13,6 +13,7 @@ processName = "SINK"
 logger = logging.getLogger(processName)
 logging.basicConfig(
     filename='struct-sst/kafka/sink_kafka.log',
+    #filename='sink_kafka.log',
     filemode="w",
     format="|%(name)s|[%(asctime)s.%(msecs)04d]:%(levelname)s - %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
@@ -25,7 +26,6 @@ final_results = {}
 logger.info("Sink ready to receive results.")
 for i in range(3):
     results = receiver.recv_json()
-    print(results)
     for year,count in results.items():
         if year in final_results:
             final_results[year]+=count
@@ -39,6 +39,7 @@ receiver.close()
 context.term()
 
 with open('struct-sst/kafka/final-results_kafka.txt', 'w') as file:
+#with open('final-results_kafka.txt', 'w') as file:
     json.dump(dict(sorted(final_results.items())), file, indent=2)
 
 logger.info('Sink Finished')
