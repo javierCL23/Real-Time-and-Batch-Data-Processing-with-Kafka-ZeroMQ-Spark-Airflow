@@ -41,7 +41,9 @@ for topic, f in delete_futures.items():
 logger.info("Creating topics...")
 time.sleep(5)
 
-new_topics = [NewTopic(topic, num_partitions=3, replication_factor=1) for topic in topics_to_reset]
+new_topics =[NewTopic(topics_to_reset[0], num_partitions=3, replication_factor=1), 
+             NewTopic(topics_to_reset[1], num_partitions=1, replication_factor=1)] #La partición del topic de control es mejor que sea única para garantizar que todos ven su mensaje
+
 create_futures = admin.create_topics(new_topics)
 
 for topic, f in create_futures.items():

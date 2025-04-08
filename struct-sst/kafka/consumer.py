@@ -38,7 +38,7 @@ config = {
     'bootstrap.servers': 'docker01.aulas.eif.urjc.es:9092',
     'group.id':          'consumers-kafka',             #Necesitan todos estar en mismo grupo para no solapar lecturas
     'enable.auto.commit': 'false',                      #En caso de error, los mensajes no se pierden
-    'auto.offset.reset': 'latest',                       #Como no se procesarán los mensajes repetidas veces no es necesario tener earliest
+    'auto.offset.reset': 'earliest',                    #Si se usa latest puede que no procesen nada en caso de que los topics no se recarguen como debe ser entre ejecuciones.
     'isolation.level': 'read_committed'
 }
 
@@ -124,4 +124,5 @@ logger.info(f"Consumer {id} has unsubscribe")
 
 sender.close()
 logger.info(f"Consumer {id} has close comunication from ZMQ")
+
 logger.info(f"Consumer {id} Finished")

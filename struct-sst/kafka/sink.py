@@ -20,7 +20,7 @@ logging.basicConfig(
     level=logging.INFO
 )
 
-print("Waiting for results")
+
 # Proceso de ZMQ
 final_results = {}
 logger.info("Sink ready to receive results.")
@@ -33,10 +33,11 @@ for i in range(3):
             final_results[year]=count
     logger.info(f"{i+1}/3 Messages Received.")
 
-
 #Finalización
 receiver.close()
 context.term()
+logger.info('Sink has closed ZMQ comunications')
+
 
 with open('struct-sst/kafka/final-results_kafka.txt', 'w') as file:
 #with open('final-results_kafka.txt', 'w') as file:
