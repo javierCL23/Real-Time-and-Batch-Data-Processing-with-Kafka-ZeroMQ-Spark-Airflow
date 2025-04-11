@@ -2,11 +2,7 @@ import pandas as pd
 import zmq
 import json
 import logging 
-import os
 
-"""if os.path.exists("struct-sst/zmq/ZMQ_logs.log"):
-    os.remove("struct-sst/zmq/ZMQ_logs.log")  # Borra el archivo al inicio
-"""
 
 # Configuración de logging
 processName = "VENTILATOR"
@@ -14,11 +10,11 @@ logger = logging.getLogger(processName)
 
 logging.basicConfig(
     filename='struct-sst/zmq/ventilador_zmq.log',
-    filemode="w",
-    format="|%(name)s|[%(asctime)s.%(msecs)04d]:%(levelname)s - %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-    level=logging.INFO
-)
+    filemode="w",       #Si existe el fichero, lo sobreescribe
+    format="|%(name)s|[%(asctime)s.%(msecs)04d]:%(levelname)s - %(message)s",   #Formato del mensaje
+    datefmt="%Y-%m-%d %H:%M:%S",    #Formato del timestamp
+    level=logging.INFO      #Puede informar con nivel info o superiores
+    )
 
 # Cargar datos
 file_path = 'data/processed/UsersSubsample.csv'
@@ -32,7 +28,7 @@ sender.bind("tcp://*:5557")  # Este bind es para que los workers se conecten
 logger.info(f"Ventilator is ready to begin.")
 # Esperar que los workers estén listos
 print("Press Enter when the workers and sink are ready: ")
-_ = input()  # Espera a que se presione Enter
+_ = input()  # Espera a que se presione Enter (No sería necesaria si se ejecuta todo con el ejecutor_ZMQ.sh)
 
 print("Sending tasks to workers...")
 logger.info("Workers are ready, sending tasks to workers...")
@@ -50,6 +46,7 @@ for _, row in df.iterrows():
     sender.send_string(row_json)  # Enviar
     i+=1
     if i%100 == 0:
+        #Cada 100 mensajes se informa de que se han enviado n mensajes
         logger.info(f"{i}/1000 items where sent")
 
 # Finalización

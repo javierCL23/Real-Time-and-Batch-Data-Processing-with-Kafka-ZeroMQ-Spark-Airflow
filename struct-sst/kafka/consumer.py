@@ -1,7 +1,7 @@
 from confluent_kafka import Consumer
 import json
 import logging
-import sys 
+import sys
 import zmq
 
 import time
@@ -10,7 +10,9 @@ import ujson
 import pyarrow as pa
 import pyarrow.parquet as pq
 
+#Configuración del log
 if len(sys.argv) < 2 or sys.argv[1] not in ["0", "1", "2"]:
+    #Solo los nombres 0,1,2 son válidos para el consumer
     raise ValueError("An argument between 0 and 2 is needed to identify the consumer.")
 
 id = sys.argv[1]
@@ -20,10 +22,10 @@ logger = logging.getLogger(processName)
 logging.basicConfig(
     filename=f'struct-sst/kafka/consumer{id}_kafka.log',
     #filename=f'consumer{id}_kafka.log',
-    filemode="w",
-    format="|%(name)s|[%(asctime)s.%(msecs)04d]:%(levelname)s - %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-    level=logging.INFO
+    filemode="w",       #Si existe el fichero, lo sobreescribe
+    format="|%(name)s|[%(asctime)s.%(msecs)04d]:%(levelname)s - %(message)s",   #Formato del mensaje
+    datefmt="%Y-%m-%d %H:%M:%S",    #Formato del timestamp
+    level=logging.INFO      #Puede informar con nivel info o superiores
 )
 
 
@@ -35,11 +37,12 @@ sender.connect("tcp://localhost:5557")
 
 # -------------------------------- Kafka ------------------------------------------
 config = {
-    'bootstrap.servers': 'docker01.aulas.eif.urjc.es:9092',
+    'bootstrap.servers': 'docker01.aulas.eif.urjc.es:9092', #IP del server de Kafka con su puerto
     'group.id':          'consumers-kafka',             #Necesitan todos estar en mismo grupo para no solapar lecturas
     'enable.auto.commit': 'false',                      #En caso de error, los mensajes no se pierden
-    'auto.offset.reset': 'earliest',                    #Si se usa latest puede que no procesen nada en caso de que los topics no se recarguen como debe ser entre ejecuciones.
-    'isolation.level': 'read_committed'
+    'auto.offset.reset': 'earliest',                    #Si se usa latest puede que no procesen nada en caso de que los topics no se recarguen antes de volver a ejecutar consumersser.
+    'isolation.level': 'read_committed',                #Necesario para el uso de transacciones
+    'partition.assignment.strategy': 'roundrobin'       #Mejora el balance de carga
 }
 
 consumer = Consumer(config)
@@ -56,32 +59,40 @@ still_data = True
 while still_data:
         message = consumer.poll(1.0)
         if message is None:
+            #No ve mensajes
             print("Waiting...")
         elif message.error():
+            #Caso de error
             logging.error(f"ERROR: {message.error()}")
         else:
             #Si ya no quedan datos por procesar se debe parar
             if message.topic() == topic_stop:
                 sender.send_json(results)
                 logger.info(f"Ending processing in consumer {id}. {count} items processed.")
+                #Confirmar que recibimos y procesamos el mensaje
                 consumer.commit(message=message, asynchronous = False)
+                #Salir del bucle
                 still_data = False
             #Procesado de los datos
             else:
+                #Cargamos el mensaje como un diccionario y lo procesamos
                 data = json.loads(message.value())
                 result = data['CreationDate'][:4]
                 if result in results:
                     results[result] += 1
                 else:
                     results[result] = 1
+                #Confirmar que recibimos y procesamos el mensaje
                 consumer.commit(message=message)
                 count+=1
             #Logs
             if count%100 == 0 and still_data:
+                #Cada 100 mensajes se informa de que se han procesado n mensajes
                 logger.info(f"{count} items were processed.")
             
 
 #Medición de tiempos con diferentes librerías:
+#Los tiempos están almacenados en los logs.
 start = time.time()
 match id:
     case "0":   #JSON
@@ -116,6 +127,8 @@ match id:
         print(f"ERROR: id:{id} is not a valid option.")
 
 
+#El más rápido es ujson dado el tamaño de los datos, pero es posible que a medida que escale el tamaño de datos a escribir, parquet sea mejor.
+#El más lento con diferencia es json
 
 #Cerramos comunicaciones en ZMQ y Kafka 
 consumer.unsubscribe()

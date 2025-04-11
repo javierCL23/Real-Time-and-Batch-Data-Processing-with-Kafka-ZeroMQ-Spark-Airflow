@@ -2,7 +2,6 @@ import logging
 import zmq
 import json
 
-import time
 context = zmq.Context()
 
 # Puerto desde el que recibirá mensajes de los consumers
@@ -14,11 +13,11 @@ logger = logging.getLogger(processName)
 logging.basicConfig(
     filename='struct-sst/kafka/sink_kafka.log',
     #filename='sink_kafka.log',
-    filemode="w",
-    format="|%(name)s|[%(asctime)s.%(msecs)04d]:%(levelname)s - %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-    level=logging.INFO
-)
+    filemode="w",       #Si existe el fichero, lo sobreescribe
+    format="|%(name)s|[%(asctime)s.%(msecs)04d]:%(levelname)s - %(message)s",   #Formato del mensaje
+    datefmt="%Y-%m-%d %H:%M:%S",    #Formato del timestamp
+    level=logging.INFO      #Puede informar con nivel info o superiores
+    )
 
 
 # Proceso de ZMQ
