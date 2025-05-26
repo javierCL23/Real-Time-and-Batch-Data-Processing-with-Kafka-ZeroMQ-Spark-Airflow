@@ -8,8 +8,6 @@
 - **Carlos Arévalo López**  
 - **Miguel Alcocer Pérez**
 
-**Fecha de entrega:** 26 de Mayo de 2025
-
 ---
 
 ## 📋 Resumen Ejecutivo
@@ -28,11 +26,13 @@ Los resultados demuestran la efectividad de las tecnologías distribuidas para e
 
 ```
 proyecto/
-├── practica1/
+├── data/                      # Datos procesados y en crudo además de algún que otro extra
+├── src/                       # Códigos útiles usados en el proyecto
+├── notebooks/                 # Jupyter Notebooks con el EDA para las decisiones del DAG de airflow
+├── stack_exchange_eda/dags/
 │   ├── ETL_ConSQL.py          # Pipeline ETL principal
-│   ├── data/                  # Datos procesados y datasets
 │   └── config/                # Configuraciones del proyecto
-├── practica2/
+├── struct-sst/
 │   ├── kafka/
 │   │   ├── admin.py          # Administración de topics Kafka
 │   │   ├── producer.py       # Productor de mensajes
@@ -42,8 +42,8 @@ proyecto/
 │       ├── ventilator.py     # Distribuidor de tareas ZeroMQ
 │       ├── worker.py         # Procesador de tareas
 │       └── sink.py           # Consolidador de resultados
-├── practica2-fase2/
-│   └── spark-streaming/      # Implementación Spark Structured Streaming
+├── spark-streaming/          # Implementación Spark Structured Streaming
+├── pyproject.toml            # Archivo con los prerequisitos y variables de configuración del proyecto
 └── README.md
 ```
 
@@ -180,69 +180,35 @@ proyecto/
 ### Prerrequisitos
 
 ```bash
-# Python 3.8+
-pip install apache-airflow pandas sqlite3 beautifulsoup4 py7zr plotly scikit-learn
-
-# Kafka
-pip install kafka-python
-
-# ZeroMQ
-pip install pyzmq
-
-# Spark
-pip install pyspark
+uv venv --python 3.11
+source .venv/bin/activate
+uv pip install .
 ```
 
-### Variables de Entorno
-
-```bash
-export AIRFLOW_HOME=~/airflow
-export KAFKA_BROKER=docker01.aulas.eif.urjc.es:9092
-export SPARK_HOME=/path/to/spark
-```
+Con esto se creará el entorno virtual con python 3.11 y se instalarán todas las dependencias necesarias.
 
 ---
 
-## 🚀 Instrucciones de Ejecución
+## 🚀 Instrucciones de Ejecución (todas con el entorno iniciado)
 
 ### Práctica 1 - Pipeline ETL
 
 ```bash
-# Inicializar Airflow
-airflow db init
-airflow users create --username admin --password admin --firstname Admin --lastname User --role Admin --email admin@example.com
-
-# Ejecutar DAG
-airflow dags trigger ETL_ConSQL
+# Iniciar Airflow
+airflowctl init stack_exchange_eda
 ```
+Desde un buscador web acceder a http://localhost:8080/ con usuario admin, contraseña la ofrecida en el init
 
 ### Práctica 2 - Kafka
 
 ```bash
-# Terminal 1: Administrador
-python kafka/admin.py
-
-# Terminal 2: Productor
-python kafka/producer.py
-
-# Terminal 3: Consumidor
-python kafka/consumer.py
-
-# Terminal 4: Sink
-python kafka/sink.py
+./struct-sst/kafka/ejecutor_Kafka.sh
 ```
 
 ### Práctica 2 - ZeroMQ
 
 ```bash
-# Terminal 1: Sink
-python zmq/sink.py
-
-# Terminal 2: Ventilator
-python zmq/ventilator.py
-
-# Terminal 3-N: Workers
-python zmq/worker.py
+./struct-sst/kafka/ejecutor_Kafka.sh
 ```
 
 ### Práctica 2 Fase 2 - Spark Streaming
@@ -257,7 +223,7 @@ spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1 spark-s
 ## 📈 Resultados y Métricas
 
 ### Rendimiento ETL
-- **Registros procesados:** 1000+ usuarios y posts
+- **Registros procesados:** 500k+ registros entre usuarios y posts
 - **Tiempo de ejecución:** ~15 minutos
 - **Transformaciones exitosas:** 100%
 
@@ -273,38 +239,14 @@ spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1 spark-s
 
 ---
 
-## 🛠️ Configuraciones Avanzadas
-
-### Kafka Consumer Configuration
-
-```python
-consumer_config = {
-    'bootstrap_servers': 'docker01.aulas.eif.urjc.es:9092',
-    'group_id': 'GR-1',
-    'auto_offset_reset': 'earliest',
-    'enable_auto_commit': True
-}
-```
-
-### Spark Streaming Configuration
-
-```python
-spark.readStream \
-    .format("kafka") \
-    .option("kafka.bootstrap.servers", "docker01.aulas.eif.urjc.es:9092") \
-    .option("subscribe", "purchases") \
-    .option("startingOffsets", "earliest") \
-    .load()
-```
-
----
-
 ## 🔍 Monitoreo y Debugging
 
 ### Logs de Airflow
 ```bash
-tail -f $AIRFLOW_HOME/logs/dag_id/task_id/execution_date/1.log
+#Rellenar con lo que se quiera monitorear
+tail -f stack_exchange_eda/logs/"dag_id=etl_dag"/"EJECUCION_CONCRETA"/"TASK_ID"/"LOG_CONCRETO"
 ```
+También se pueden ver desde http://localhost:8080/dags/etl_dag/grid?tab=logs
 
 ### Kafka Consumer Lag
 ```bash
@@ -318,16 +260,6 @@ http://localhost:4040
 
 ---
 
-## 🤝 Contribuciones
-
-Cada miembro del equipo contribuyó de manera equitativa:
-
-- **Javier Carreño Luque:** Pipeline ETL y documentación
-- **Carlos Arévalo López:** Sistemas de mensajería distribuida  
-- **Miguel Alcocer Pérez:** Spark Structured Streaming y arquitectura ML
-
----
-
 ## 📚 Referencias
 
 - [Apache Airflow Documentation](https://airflow.apache.org/docs/)
@@ -336,12 +268,6 @@ Cada miembro del equipo contribuyó de manera equitativa:
 - [Spark Kafka Integration](https://spark.apache.org/docs/latest/structured-streaming-kafka-integration.html)
 - [Spark ML Guide](https://spark.apache.org/docs/latest/ml-guide.html)
 - [ZeroMQ Guide](https://zguide.zeromq.org/)
-
----
-
-## 📞 Contacto
-
-Para consultas sobre el proyecto, contactar con cualquier miembro del equipo a través de la plataforma GitLab EIF de la URJC.
 
 ---
 
