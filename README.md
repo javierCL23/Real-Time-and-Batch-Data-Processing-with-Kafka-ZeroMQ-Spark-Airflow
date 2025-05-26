@@ -215,7 +215,7 @@ Desde un buscador web acceder a http://localhost:8080/ con usuario admin, contra
 
 ```bash
 # Ejecutar aplicación Spark
-spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1 spark-streaming/app.py
+spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1 spark-streaming/struct_kafka_consumer_local.py
 ```
 
 ---
