@@ -21,6 +21,20 @@ pathToData = config['tools']['project_paths']['pathToData']
 countries_dict_path = config['tools']['project_paths']['countries_dict_path']
 processed_data_path = config['tools']['project_paths']['processed_data_path']
 
+def XML_to_pkl(ruta_archivos,file):        
+    # Verifica si la ruta existe
+    if not os.path.isdir(ruta_archivos):
+        print(f"La ruta especificada no existe: {ruta_archivos}")
+    else:
+        #Comprueba si es un .xml
+        if file.lower().endswith(".xml"):
+            ruta_completa = os.path.join(ruta_archivos, file)
+            salida_pkl = os.path.join(ruta_archivos, f"{file[:-4]}.pkl")
+            #Convierte a pkl
+            pd.read_xml(ruta_completa).to_pickle(salida_pkl)
+            print(f"{file[:-4]}.pkl creado.")
+
+
 @dag(
     schedule=None,
     start_date=pendulum.datetime(2025, 2, 3, tz="UTC"),
@@ -48,7 +62,7 @@ def etl_dag():
                 archive = py7zr.SevenZipFile(str(pathToData) + "data.7z", 'r')
                 archive.extract(path=pathToData, targets=[file])
                 archive.reset()
-        
+                XML_to_pkl(ruta_archivos=pathToData,file=file)
         if archive != 0:
             archive.close()
         
