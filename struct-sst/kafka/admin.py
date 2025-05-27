@@ -19,7 +19,7 @@ logging.basicConfig(
 
 #Configuración de Kafka Admin
 config = {
-    'bootstrap.servers': tml["tools.address"]["bootstrap.servers"], #IP del server de Kafka con su puerto
+    'bootstrap.servers': tml["tools"]["address"]["bootstrap.servers"], #IP del server de Kafka con su puerto
 }
 
 admin = AdminClient(config)
