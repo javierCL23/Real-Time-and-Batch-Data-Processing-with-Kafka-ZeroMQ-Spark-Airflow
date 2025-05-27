@@ -2,12 +2,11 @@
 
 from random import choice
 from confluent_kafka import Producer
-from tomli import load
+import toml
 
 if __name__ == '__main__':
 
-    with open("pyproject.toml", mode="rb") as f:
-        tml = load(f)
+    tml = toml.load("pyproject.toml")
 
     config = {
         # User-specific properties that you must set
