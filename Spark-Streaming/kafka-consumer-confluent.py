@@ -10,7 +10,7 @@ if __name__ == '__main__':
     config = {
         # User-specific properties that you must set
         #'bootstrap.servers': 'localhost:9092',
-        'bootstrap.servers': tml["tools.address"]["bootstrap.servers"],
+        'bootstrap.servers': tml["tools"]["address"]["bootstrap.servers"],
         #'bootstrap.servers': '10.110.100.77',
         # Fixed properties
         'group.id':          'kafka-python-getting-started',
