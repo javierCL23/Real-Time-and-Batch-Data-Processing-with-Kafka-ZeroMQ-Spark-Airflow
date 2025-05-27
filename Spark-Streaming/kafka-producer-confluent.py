@@ -10,7 +10,7 @@ if __name__ == '__main__':
 
     config = {
         # User-specific properties that you must set
-        'bootstrap.servers': tml["tools.address"]["bootstrap.servers"],
+        'bootstrap.servers': tml["tools"]["address"]["bootstrap.servers"],
         # Fixed properties
         'acks': 'all'
     }
