@@ -2,6 +2,9 @@ from confluent_kafka.admin import AdminClient, NewTopic
 import time
 import logging
 import sys
+import toml
+
+tml = toml.load("pyproject.toml")
 
 # Configuración del logger
 logger = logging.getLogger("ADMIN")
@@ -16,7 +19,7 @@ logging.basicConfig(
 
 #Configuración de Kafka Admin
 config = {
-    'bootstrap.servers': 'docker01.aulas.eif.urjc.es:9092', #IP del server de Kafka con su puerto
+    'bootstrap.servers': tml["tools.address"]["bootstrap.servers"], #IP del server de Kafka con su puerto
 }
 
 admin = AdminClient(config)
