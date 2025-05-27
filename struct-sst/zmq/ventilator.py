@@ -20,7 +20,7 @@ logging.basicConfig(
 tml = toml.load("pyproject.toml")
 
 # Cargar datos
-file_path = tml["tools.project_paths"]["users_subsample_path"]
+file_path = tml["tools"]["project_paths"]["users_subsample_path"]
 df = pd.read_csv(file_path)
 
 # Configurar ZeroMQ
