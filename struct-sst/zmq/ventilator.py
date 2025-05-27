@@ -2,6 +2,7 @@ import pandas as pd
 import zmq
 import json
 import logging 
+import toml
 
 
 # Configuración de logging
@@ -16,8 +17,10 @@ logging.basicConfig(
     level=logging.INFO      #Puede informar con nivel info o superiores
     )
 
+tml = toml.load("pyproject.toml")
+
 # Cargar datos
-file_path = 'data/processed/UsersSubsample.csv'
+file_path = tml["tools.project_paths"]["users_subsample_path"]
 df = pd.read_csv(file_path)
 
 # Configurar ZeroMQ
