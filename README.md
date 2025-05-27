@@ -143,8 +143,8 @@ proyecto/
 │   Apache Kafka  │───▶│ Spark Structured     │───▶│ Preprocessing   │
 │                 │    │ Streaming            │    │                 │
 └─────────────────┘    └──────────────────────┘    └─────────────────┘
-                                  │                           │
-                                  ▼                           ▼
+                                                            │
+                                                            ▼
 ┌─────────────────┐    ┌──────────────────────┐    ┌─────────────────┐
 │   Output Sink   │◀───│    ML Model          │◀───│ Feature         │
 │                 │    │                      │    │ Engineering     │
