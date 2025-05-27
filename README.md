@@ -166,6 +166,7 @@ proyecto/
 **3. Preprocesamiento**
 - Limpieza de datos HTML
 - Normalización de fechas y ubicaciones
+- Tratamiento de valores faltantes
 - Feature engineering en tiempo real
 
 **4. Modelo ML**
@@ -197,11 +198,12 @@ Con esto se creará el entorno virtual con python 3.11 y se instalarán todas la
 # Iniciar Airflow
 airflowctl init stack_exchange_eda #Para crear el proyecto de airflow
 
-#Una vez creado se debe de cambiar la ruta del entorno virtual que usa en el settings.yaml para que sea la del proyecto general
+#Una vez creado se debe de cambiar la ruta del entorno virtual que usa en 
+#el settings.yaml para que sea la del proyecto general
 
 airflow start stack_exchange
 ```
-Desde un buscador web acceder a http://localhost:8080/ con usuario admin, contraseña la ofrecida en el init
+Desde un buscador web acceder a http://localhost:8080/ con usuario admin, contraseña, la ofrecida en el start
 
 ### Práctica 2 - Kafka
 
