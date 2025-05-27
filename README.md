@@ -224,7 +224,7 @@ spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1 spark-s
 
 ### Rendimiento ETL
 - **Registros procesados:** 500k+ registros entre usuarios y posts
-- **Tiempo de ejecución:** ~15 minutos
+- **Tiempo de ejecución:** ~3 minutos
 - **Transformaciones exitosas:** 100%
 
 ### Mensajería Distribuida
@@ -247,11 +247,6 @@ spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1 spark-s
 tail -f stack_exchange_eda/logs/"dag_id=etl_dag"/"EJECUCION_CONCRETA"/"TASK_ID"/"LOG_CONCRETO"
 ```
 También se pueden ver desde http://localhost:8080/dags/etl_dag/grid?tab=logs
-
-### Kafka Consumer Lag
-```bash
-kafka-consumer-groups.sh --bootstrap-server docker01.aulas.eif.urjc.es:9092 --describe --group GR-1
-```
 
 ### Spark Streaming UI
 ```
