@@ -3,12 +3,15 @@ import json
 import logging
 import sys
 import zmq
+import toml
 
 import time
 import json
 import ujson
 import pyarrow as pa
 import pyarrow.parquet as pq
+
+tml = toml.load("pyproject.toml")
 
 #Configuración del log
 if len(sys.argv) < 2 or sys.argv[1] not in ["0", "1", "2"]:
@@ -37,7 +40,7 @@ sender.connect("tcp://localhost:5557")
 
 # -------------------------------- Kafka ------------------------------------------
 config = {
-    'bootstrap.servers': 'docker01.aulas.eif.urjc.es:9092', #IP del server de Kafka con su puerto
+    'bootstrap.servers': tml["tools"]["address"]["bootstrap.servers"], #IP del server de Kafka con su puerto
     'group.id':          'consumers-kafka',             #Necesitan todos estar en mismo grupo para no solapar lecturas
     'enable.auto.commit': 'false',                      #En caso de error, los mensajes no se pierden
     'auto.offset.reset': 'earliest',                    #Si se usa latest puede que no procesen nada en caso de que los topics no se recarguen antes de volver a ejecutar consumersser.
@@ -96,14 +99,14 @@ while still_data:
 start = time.time()
 match id:
     case "0":   #JSON
-        with open("struct-sst/kafka/JSON.json","w") as f:
+        with open(tml["tools.project_paths"]["json_path"],"w") as f:
         #with open("JSON.json","w") as f:
             json.dump(dict(sorted(results.items())),f,indent=2)
         
         ending = time.time()
         logger.info(f"Elapsed time to write results with JSON : {ending-start}s.")
     case "1":   #UJSON
-        with open("struct-sst/kafka/UJSON.json","w") as f:
+        with open(tml["tools.project_paths"]["ujson_path"],"w") as f:
         #with open("UJSON.json","w") as f:
             ujson.dump(dict(sorted(results.items())),f,indent=2)
         
@@ -118,7 +121,7 @@ match id:
         
         table = pa.table([year_array, value_array], names=["year", "value"])
         start_write = time.time()
-        pq.write_table(table, "struct-sst/kafka/PARQUET.parquet")
+        pq.write_table(table, tml["tools.project_paths"]["parquet_path"])
         #pq.write_table(table, "PARQUET.parquet")
         ending = time.time()
         logger.info(f"Elapsed time to write results with PARQUET : {ending-start}s ({ending-start_write}s real time).")
