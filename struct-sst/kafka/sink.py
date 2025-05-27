@@ -1,6 +1,9 @@
 import logging
 import zmq
 import json
+import toml
+
+config = toml.load("pyproject.toml")
 
 context = zmq.Context()
 
@@ -38,7 +41,7 @@ context.term()
 logger.info('Sink has closed ZMQ comunications')
 
 
-with open('struct-sst/kafka/final-results_kafka.txt', 'w') as file:
+with open(tml["tools"]["project_paths"]["results_kafka_path"], 'w') as file:
 #with open('final-results_kafka.txt', 'w') as file:
     json.dump(dict(sorted(final_results.items())), file, indent=2)
 
