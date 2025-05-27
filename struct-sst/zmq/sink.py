@@ -55,7 +55,7 @@ controller.close()
 context.term()
 
 #Escribir resultados
-with open(tml["tools.project_paths"]["results_zmq_path"], 'w') as file:
+with open(tml["tools"]["project_paths"]["results_zmq_path"], 'w') as file:
     json.dump(dict(sorted(resultados.items())),file,indent=2)
     
 logger.info('Sink Finished')
