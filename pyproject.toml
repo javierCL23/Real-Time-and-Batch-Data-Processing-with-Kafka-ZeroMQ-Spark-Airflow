@@ -28,6 +28,12 @@ db_path = "/tmp/airflow_etl.db"
 pathToData = "data/raw/"
 countries_dict_path = "data/paisesDict.json"
 processed_data_path = "data/processed"
+users_subsample_path = "data/processed/UsersSubsample.csv"
+json_path = "struct-sst/kafka/JSON.json"
+ujson_path = "struct-sst/kafka/UJSON.json"
+parquet_path = "struct-sst/kafka/PARQUET.parquet"
+results_kafka_path = "struct-sst/kafka/final-results_kafka.txt"
+results_zmq_path = "struct-sst/zmq/final-results_zmq.txt"
 
 [tools.address]
 'bootstrap.servers' = "docker01.aulas.eif.urjc.es:9092"
