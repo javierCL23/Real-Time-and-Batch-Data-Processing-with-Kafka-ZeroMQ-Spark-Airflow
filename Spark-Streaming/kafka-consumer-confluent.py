@@ -1,13 +1,18 @@
 #!/usr/bin/env python
 
 from confluent_kafka import Consumer
+from tomli import load
 
 if __name__ == '__main__':
+
+    with open("pyproject.toml", mode="rb") as f:
+        tml = load(f)
+
 
     config = {
         # User-specific properties that you must set
         #'bootstrap.servers': 'localhost:9092',
-        'bootstrap.servers': 'docker01.aulas.eif.urjc.es:9092',
+        'bootstrap.servers': tml["tools.address"]["bootstrap.servers"],
         #'bootstrap.servers': '10.110.100.77',
         # Fixed properties
         'group.id':          'kafka-python-getting-started',
