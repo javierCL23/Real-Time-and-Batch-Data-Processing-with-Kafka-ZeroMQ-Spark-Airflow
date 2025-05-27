@@ -99,14 +99,14 @@ while still_data:
 start = time.time()
 match id:
     case "0":   #JSON
-        with open(tml["tools.project_paths"]["json_path"],"w") as f:
+        with open(tml["tools"]["project_paths"]["json_path"],"w") as f:
         #with open("JSON.json","w") as f:
             json.dump(dict(sorted(results.items())),f,indent=2)
         
         ending = time.time()
         logger.info(f"Elapsed time to write results with JSON : {ending-start}s.")
     case "1":   #UJSON
-        with open(tml["tools.project_paths"]["ujson_path"],"w") as f:
+        with open(tml["tools"]["project_paths"]["ujson_path"],"w") as f:
         #with open("UJSON.json","w") as f:
             ujson.dump(dict(sorted(results.items())),f,indent=2)
         
@@ -121,7 +121,7 @@ match id:
         
         table = pa.table([year_array, value_array], names=["year", "value"])
         start_write = time.time()
-        pq.write_table(table, tml["tools.project_paths"]["parquet_path"])
+        pq.write_table(table, tml["tools"]["project_paths"]["parquet_path"])
         #pq.write_table(table, "PARQUET.parquet")
         ending = time.time()
         logger.info(f"Elapsed time to write results with PARQUET : {ending-start}s ({ending-start_write}s real time).")
