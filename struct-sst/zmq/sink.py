@@ -1,7 +1,9 @@
 import logging
 import zmq
 import json
+import toml
 
+tml = toml.load("pyproject.toml")
 context = zmq.Context()
 
 # Recibir mensajes
@@ -53,7 +55,7 @@ controller.close()
 context.term()
 
 #Escribir resultados
-with open('struct-sst/zmq/final-results_zmq.txt', 'w') as file:
+with open(tml["tools.project_paths"]["results_zmq_path"], 'w') as file:
     json.dump(dict(sorted(resultados.items())),file,indent=2)
     
 logger.info('Sink Finished')
