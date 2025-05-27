@@ -29,12 +29,5 @@ pathToData = "data/raw/"
 countries_dict_path = "data/paisesDict.json"
 processed_data_path = "data/processed"
 
-[p2-producer]
+[tools.address]
 'bootstrap.servers' = "docker01.aulas.eif.urjc.es:9092"
-'acks' = "all"
-
-[p2-consumer]
-'bootstrap.servers' = "docker01.aulas.eif.urjc.es:9092"
-'group.id' = "kafka-python-getting-started"
-'enable.auto.commit' = "false"
-'auto.offset.reset' = "earliest"
