@@ -134,48 +134,6 @@ proyecto/
 
 ---
 
-## 🏛️ Diseño de Pipeline ML con Streaming
-
-### Arquitectura Propuesta
-
-```
-┌─────────────────┐    ┌──────────────────────┐    ┌─────────────────┐
-│   Apache Kafka  │───▶│ Spark Structured     │───▶│ Preprocessing   │
-│                 │    │ Streaming            │    │                 │
-└─────────────────┘    └──────────────────────┘    └─────────────────┘
-                                                            │
-                                                            ▼
-┌─────────────────┐    ┌──────────────────────┐    ┌─────────────────┐
-│   Output Sink   │◀───│    ML Model          │◀───│ Feature         │
-│                 │    │                      │    │ Engineering     │
-└─────────────────┘    └──────────────────────┘    └─────────────────┘
-```
-
-### Componentes del Sistema
-
-**1. Ingesta de Datos (Apache Kafka)**
-- Topic: `stackexchange-stream`
-- Particionamiento por tipo de contenido
-- Serialización eficiente (Avro/Protocol Buffers)
-
-**2. Procesamiento Streaming (Spark)**
-- Lectura continua desde Kafka
-- Ventanas temporales para agregaciones
-- Checkpointing para tolerancia a fallos
-
-**3. Preprocesamiento**
-- Limpieza de datos HTML
-- Normalización de fechas y ubicaciones
-- Tratamiento de valores faltantes
-- Feature engineering en tiempo real
-
-**4. Modelo ML**
-- Predicción de categorías de posts
-- Actualización online del modelo
-- Métricas de rendimiento en tiempo real
-
----
-
 ## 🔧 Instalación y Configuración
 
 ### Prerrequisitos
