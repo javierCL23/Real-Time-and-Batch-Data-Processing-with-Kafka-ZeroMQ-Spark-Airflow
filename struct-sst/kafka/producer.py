@@ -2,6 +2,9 @@ from confluent_kafka import Producer
 import json
 import logging
 import csv
+import toml
+
+tml = toml.load("pyproject.toml")
 
 # Configuración del logger
 logger = logging.getLogger("PRODUCER")
@@ -15,7 +18,7 @@ logging.basicConfig(
 
 # Configurar el productor Kafka con transactional.id
 conf = {
-    'bootstrap.servers': 'docker01.aulas.eif.urjc.es:9092',     #IP del server de Kafka con su puerto
+    'bootstrap.servers': tml["tools.address"]["bootstrap.servers"],     #IP del server de Kafka con su puerto
     'transactional.id': 'producer-items-gr1'                    #Id del grupo de transacciones
 }
 
@@ -34,7 +37,7 @@ try:
     producer.begin_transaction()
 
     # Leer datos del CSV
-    with open("data/processed/UsersSubsample.csv", "r", encoding="utf-8") as f:
+    with open(tml["tools.project_paths"]["users_subsample_path"], "r", encoding="utf-8") as f:
         reader = csv.DictReader(f)
         items = list(reader)
 
