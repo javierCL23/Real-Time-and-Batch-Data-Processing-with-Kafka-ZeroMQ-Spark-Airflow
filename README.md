@@ -195,7 +195,11 @@ Con esto se creará el entorno virtual con python 3.11 y se instalarán todas la
 
 ```bash
 # Iniciar Airflow
-airflowctl init stack_exchange_eda
+airflowctl init stack_exchange_eda #Para crear el proyecto de airflow
+
+#Una vez creado se debe de cambiar la ruta del entorno virtual que usa en el settings.yaml para que sea la del proyecto general
+
+airflow start stack_exchange
 ```
 Desde un buscador web acceder a http://localhost:8080/ con usuario admin, contraseña la ofrecida en el init
 
@@ -214,6 +218,10 @@ Desde un buscador web acceder a http://localhost:8080/ con usuario admin, contra
 ### Práctica 2 Fase 2 - Spark Streaming
 
 ```bash
+# Ejecutar versión local
+python3 spark-streaming/kafka-producer-confluent.py #Para producir mensajes
+python3 spark-streaming/kafka-consumer-confluent.py #Para consumir los mensajes del producer
+
 # Ejecutar aplicación Spark
 spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1 spark-streaming/struct_kafka_consumer_local.py
 ```
