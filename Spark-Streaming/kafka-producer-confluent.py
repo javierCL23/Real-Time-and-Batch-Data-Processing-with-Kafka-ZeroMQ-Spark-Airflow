@@ -2,12 +2,16 @@
 
 from random import choice
 from confluent_kafka import Producer
+from tomli import load
 
 if __name__ == '__main__':
 
+    with open("pyproject.toml", mode="rb") as f:
+        tml = load(f)
+
     config = {
         # User-specific properties that you must set
-        'bootstrap.servers':'docker01.aulas.eif.urjc.es:9092',
+        'bootstrap.servers': tml["tools.address"]["bootstrap.servers"],
         # Fixed properties
         'acks': 'all'
     }
