@@ -3,7 +3,7 @@
 # ----¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡¡DEBE SER EJECUTADO EN struct-sst/../ !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!----
 
 # Configuración
-
+DATA_PATH="data/processed/"
 SCRIPT_DIR="struct-sst/kafka"
 #SCRIPT_DIR="." #Para hacer pruebas 
 LOG_DIR="struct-sst/kafka"
@@ -45,6 +45,11 @@ python3 $SCRIPT_DIR/consumer.py 2 > /dev/null &
 WORKER2_PID=$!
 
 #Ejecutar producer
+if [ ! -f "$DATA_PATH/UsersSubsample.csv" ]; then
+    echo "No existe la muestra de usuarios. Generando: ..."
+    python3 "src/generate_sample_users.py"
+fi
+
 python3 $SCRIPT_DIR/producer.py &
 
 # Esperamos para no coger logs a medio terminar

@@ -1,6 +1,7 @@
-!/bin/bash
+#!/bin/bash
 
 # Configuración
+DATA_PATH="data/processed/"
 NUM_WORKERS=3                     #Modificable (solución generalizada a n workers)
 SCRIPT_DIR="struct-sst/zmq"       # Directorio de los scripts
 LOG_DIR="struct-sst/zmq"          # Directorio de logs
@@ -29,6 +30,11 @@ for i in $(seq 1 $NUM_WORKERS); do
 done
 
 # 3. Iniciar Ventilator
+if [ ! -f "$DATA_PATH/UsersSubsample.csv" ]; then
+    echo "No existe la muestra de usuarios. Generando: ..."
+    python3 "src/generate_sample_users.py"
+fi
+
 echo "Iniciando Ventilator..."
 python3 $SCRIPT_DIR/ventilator.py
 

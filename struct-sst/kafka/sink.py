@@ -3,7 +3,7 @@ import zmq
 import json
 import toml
 
-config = toml.load("pyproject.toml")
+tml = toml.load("pyproject.toml")
 
 context = zmq.Context()
 
